@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BattleOfSea.LobbyView">
+  <Grid ColumnDefinitions="3*,2*" RowDefinitions="Auto,*" Margin="10">
+    <TextBlock Text="Лобби" FontSize="20" Margin="4" />
+
+    <ListBox Grid.Row="1" Grid.Column="0" Items="{Binding Rooms}" SelectedItem="{Binding SelectedRoom}" Name="RoomsList">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Border Padding="6" Margin="4" BorderBrush="Gray" BorderThickness="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+              <StackPanel Width="220">
+                <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                <TextBlock Text="{Binding PlayersDisplay}" FontSize="12" />
+              </StackPanel>
+              <Button Content="Присоединиться" Command="{Binding DataContext.JoinCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalAlignment="Right" />
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8" VerticalAlignment="Top" Spacing="8">
+      <Button Content="Создать комнату" Command="{Binding CreateRoomCommand}" />
+      <Button Content="Обновить список" Command="{Binding RefreshCommand}" />
+      <Button Content="Быстрый старт" Command="{Binding QuickStartCommand}" />
+      <Button Content="Выйти" Command="{Binding ExitCommand}" />
+    </StackPanel>
+  </Grid>
+</UserControl>
