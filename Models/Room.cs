@@ -1,4 +1,4 @@
-namespace BattleOfSea
+namespace BattleOfSea.Models
 {
     public class Room
     {

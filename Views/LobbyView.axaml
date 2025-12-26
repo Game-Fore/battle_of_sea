@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="BattleOfSea.LobbyView">
+             x:Class="BattleOfSea.Views.LobbyView">
   <Grid ColumnDefinitions="3*,2*" RowDefinitions="Auto,*" Margin="10">
     <TextBlock Text="Лобби" FontSize="20" Margin="4" />
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:BattleOfSea"
+        xmlns:views="clr-namespace:BattleOfSea.Views"
         x:Class="BattleOfSea.MainWindow"
         Title="Battle of Sea" Width="900" Height="600">
-  <local:LobbyView />
+  <views:LobbyView />
 </Window>

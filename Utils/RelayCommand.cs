@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Input;
 
-namespace BattleOfSea
+namespace BattleOfSea.Utils
 {
     public class RelayCommand : ICommand
     {

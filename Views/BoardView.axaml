@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BattleOfSea.Views.BoardView">
+  <StackPanel Orientation="Horizontal" Spacing="12">
+    <StackPanel>
+      <TextBlock Text="Ваше поле" FontWeight="Bold" Margin="0,0,0,6" />
+      <ItemsControl Name="OwnGrid" Items="{Binding Own.Cells}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Width="300" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border BorderBrush="Gray" BorderThickness="1" Width="28" Height="28" Margin="1" Background="LightBlue">
+              <TextBlock Text="{Binding Display}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+
+    <StackPanel>
+      <TextBlock Text="Поле противника" FontWeight="Bold" Margin="0,0,0,6" />
+      <ItemsControl Name="EnemyGrid" Items="{Binding Enemy.Cells}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Width="300" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Button Width="28" Height="28" Margin="1" Tag="{Binding}"
+                    PointerEnter="Cell_PointerEnter" PointerLeave="Cell_PointerLeave" Click="EnemyCell_Click">
+              <TextBlock Text="{Binding Display}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </StackPanel>
+</UserControl>
