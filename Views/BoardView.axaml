@@ -5,7 +5,7 @@
   <StackPanel Orientation="Horizontal" Spacing="12">
     <StackPanel>
       <TextBlock Text="Ваше поле" FontWeight="Bold" Margin="0,0,0,6" />
-      <ItemsControl Name="OwnGrid" Items="{Binding Own.Cells}">
+      <ItemsControl Name="OwnGrid" ItemsSource="{Binding Own.Cells}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <WrapPanel Width="300" />
@@ -23,7 +23,7 @@
 
     <StackPanel>
       <TextBlock Text="Поле противника" FontWeight="Bold" Margin="0,0,0,6" />
-      <ItemsControl Name="EnemyGrid" Items="{Binding Enemy.Cells}">
+      <ItemsControl Name="EnemyGrid" ItemsSource="{Binding Enemy.Cells}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <WrapPanel Width="300" />
@@ -31,8 +31,12 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Button Width="28" Height="28" Margin="1" Tag="{Binding}"
-                    PointerEnter="Cell_PointerEnter" PointerLeave="Cell_PointerLeave" Click="EnemyCell_Click">
+            <Button Width="28" Height="28" Margin="1" Tag="{Binding}" Click="EnemyCell_Click">
+              <Button.Styles>
+                <Style Selector="Button:pointerover">
+                  <Setter Property="Background" Value="LightGoldenrodYellow" />
+                </Style>
+              </Button.Styles>
               <TextBlock Text="{Binding Display}" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Button>
           </DataTemplate>

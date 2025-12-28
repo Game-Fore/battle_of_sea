@@ -11,27 +11,12 @@
     <PackageReference Include="Avalonia" Version="11.0.0" />
     <PackageReference Include="Avalonia.Desktop" Version="11.0.0" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="Views\**" />
-    <Compile Remove="ViewModels\**" />
-    <Compile Remove="Models\**" />
-    <Compile Remove="Controls\**" />
-    <Compile Remove="Utils\**" />
-    <Compile Remove="Services\**" />
-  </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Views\**" />
-    <Compile Include="ViewModels\**" />
-    <Compile Include="Models\**" />
-    <Compile Include="Controls\**" />
-    <Compile Include="Utils\**" />
-    <Compile Include="Services\**" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <!-- Treat AXAML as content so Avalonia build targets pick them up -->
     <None Include="Views\**\*.axaml" />
     <None Include="Controls\**\*.axaml" />
   </ItemGroup>

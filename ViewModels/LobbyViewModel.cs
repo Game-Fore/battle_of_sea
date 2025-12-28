@@ -27,7 +27,7 @@ namespace BattleOfSea.ViewModels
         {
             // Static placeholder rooms (only free rooms are added to the visible list)
             var all = new[]
-            {
+            {//
                 new Models.Room("Alpha", 1, 2),
                 new Models.Room("Bravo", 0, 2),
                 new Models.Room("Charlie", 2, 4),

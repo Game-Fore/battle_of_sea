@@ -11,21 +11,24 @@ namespace BattleOfSea.Views
             DataContext = new ViewModels.LobbyViewModel();
 
             var lb = this.FindControl<ListBox>("RoomsList");
-            lb.DoubleTapped += (s, e) =>
+            if (lb != null)
             {
-                if (lb.SelectedItem is Models.Room room)
+                lb.DoubleTapped += (s, e) =>
                 {
-                    Console.WriteLine($"Room double-clicked: {room.Name}");
-                }
-            };
+                    if (lb.SelectedItem is Models.Room room)
+                    {
+                        Console.WriteLine($"Room double-clicked: {room.Name}");
+                    }
+                };
 
-            lb.SelectionChanged += (s, e) =>
-            {
-                if (lb.SelectedItem is Models.Room room)
+                lb.SelectionChanged += (s, e) =>
                 {
-                    Console.WriteLine($"Room clicked (selection): {room.Name}");
-                }
-            };
+                    if (lb.SelectedItem is Models.Room room)
+                    {
+                        Console.WriteLine($"Room clicked (selection): {room.Name}");
+                    }
+                };
+            }
         }
     }
 }
