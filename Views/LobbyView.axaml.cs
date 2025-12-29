@@ -18,6 +18,8 @@ namespace BattleOfSea.Views
                     if (lb.SelectedItem is Models.Room room)
                     {
                         Console.WriteLine($"Room double-clicked: {room.Name}");
+                        if (DataContext is ViewModels.LobbyViewModel lvm)
+                            lvm.JoinCommand.Execute(room);
                     }
                 };
 
@@ -46,6 +48,8 @@ namespace BattleOfSea.Views
                 if (DataContext is ViewModels.LobbyViewModel lvm)
                 {
                     lvm.AddRoom(room);
+                    // auto-join created room
+                    lvm.JoinCommand.Execute(room);
                 }
                 else
                 {

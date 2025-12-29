@@ -5,7 +5,12 @@
              xmlns:views="clr-namespace:BattleOfSea.Views"
              x:Class="BattleOfSea.Views.GameView">
   <StackPanel Margin="8" Spacing="8">
-    <TextBlock Text="{Binding StatusText}" FontSize="18" HorizontalAlignment="Center" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+      <Button Content="Выйти в лобби" Click="ExitToLobby_Click" />
+      <TextBlock Text="{Binding StatusText}" FontSize="18" HorizontalAlignment="Center" Margin="12,0,0,0" />
+      <TextBlock Text="{Binding RoomName, StringFormat='Комната: {0}'}" FontSize="12" Margin="12,4,0,0" />
+    </StackPanel>
+
     <controls:TimerControl HorizontalAlignment="Center" />
     <views:BoardView />
   </StackPanel>

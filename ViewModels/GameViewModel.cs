@@ -27,9 +27,17 @@ namespace BattleOfSea.ViewModels
             _ => string.Empty
         };
 
-        public GameViewModel()
+        public string? RoomName { get; }
+        public event Action? ExitRequested;
+
+        public GameViewModel(Models.Room? room = null)
         {
+            RoomName = room?.Name;
+            if (RoomName != null)
+                State = GameState.WaitingForOpponent;
         }
+
+        public void RequestExit() => ExitRequested?.Invoke();
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null) =>

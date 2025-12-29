@@ -7,7 +7,15 @@ namespace BattleOfSea.Views
         public GameView()
         {
             InitializeComponent();
-            DataContext = new ViewModels.GameViewModel();
+            // DataContext will be set by the host (MainWindow) so we can pass a Room
+        }
+
+        private void ExitToLobby_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.GameViewModel gvm)
+            {
+                gvm.RequestExit();
+            }
         }
     }
 }

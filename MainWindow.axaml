@@ -4,5 +4,7 @@
         xmlns:views="clr-namespace:BattleOfSea.Views"
         x:Class="BattleOfSea.MainWindow"
         Title="Battle of Sea" Width="900" Height="600">
-  <views:LobbyView />
+  <ContentControl Name="MainContent">
+    <views:LobbyView Name="LobbyViewControl" />
+  </ContentControl>
 </Window>

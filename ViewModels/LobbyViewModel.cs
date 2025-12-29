@@ -52,6 +52,8 @@ namespace BattleOfSea.ViewModels
             ExitCommand = new Utils.RelayCommand(_ => Console.WriteLine("Exit clicked"));
         }
 
+        public event Action<Models.Room?>? JoinRequested;
+
         public void AddRoom(Models.Room room)
         {
             if (room != null && room.Players < room.MaxPlayers)
@@ -67,9 +69,10 @@ namespace BattleOfSea.ViewModels
 private void JoinRoom(Models.Room? room)
         {
             if (room != null)
+            {
                 Console.WriteLine($"Join requested: {room.Name}");
-            else
-                Console.WriteLine("Join requested: (no room selected)");
+                JoinRequested?.Invoke(room);
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
