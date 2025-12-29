@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="BattleOfSea.Views.CreateRoomWindow"
+        Title="Создать комнату" Width="360" Height="200" WindowStartupLocation="CenterOwner">
+  <StackPanel Margin="12" Spacing="8">
+    <TextBlock Text="Название комнаты" />
+    <TextBox Text="{Binding Name, Mode=TwoWay}" />
+    <TextBlock Text="{Binding NameError}" Foreground="Red" FontSize="12" />
+
+    <TextBlock Text="Пароль (необязательно)" />
+    <TextBox Text="{Binding Password, Mode=TwoWay}" />
+
+    <TextBlock Text="Максимум игроков" />
+    <ComboBox SelectedItem="{Binding MaxPlayers, Mode=TwoWay}" ItemsSource="{Binding MaxPlayersOptions}" />
+
+    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+      <CheckBox Content="Приватная" IsChecked="{Binding IsPrivate, Mode=TwoWay}" />
+      <TextBlock Text="Тип игры:" VerticalAlignment="Center" Margin="8,0,0,0" />
+      <ComboBox SelectedItem="{Binding SelectedGameType}" ItemsSource="{Binding GameTypes}" Width="120" />
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Отмена" Click="Cancel_Click" />
+      <Button Content="Создать" Click="Create_Click" IsEnabled="{Binding CanCreate}" />
+    </StackPanel>
+  </StackPanel>
+</Window>

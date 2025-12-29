@@ -52,7 +52,19 @@ namespace BattleOfSea.ViewModels
             ExitCommand = new Utils.RelayCommand(_ => Console.WriteLine("Exit clicked"));
         }
 
-        private void JoinRoom(Models.Room? room)
+        public void AddRoom(Models.Room room)
+        {
+            if (room != null && room.Players < room.MaxPlayers)
+            {
+                Rooms.Add(room);
+                Console.WriteLine($"Room created: {room.Name} ({room.Players}/{room.MaxPlayers})");
+            }
+            else
+            {
+                Console.WriteLine($"Room not added (full or invalid): {room?.Name}");
+            }
+        }
+private void JoinRoom(Models.Room? room)
         {
             if (room != null)
                 Console.WriteLine($"Join requested: {room.Name}");
