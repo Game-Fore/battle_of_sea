@@ -4,13 +4,18 @@ namespace BattleOfSea
 {
     public partial class MainWindow : Window
     {
+        private ContentControl? _mainContent;
+        private Views.LobbyView? _lobbyView;
+
         public MainWindow()
         {
             InitializeComponent();
 
-            // Subscribe to lobby join requests
-            var lobby = this.FindControl<Views.LobbyView>("LobbyViewControl");
-            if (lobby?.DataContext is ViewModels.LobbyViewModel lvm)
+            // Cache controls and subscribe to lobby join requests
+            _mainContent = this.FindControl<ContentControl>("MainContent");
+            _lobbyView = this.FindControl<Views.LobbyView>("LobbyViewControl");
+
+            if (_lobbyView?.DataContext is ViewModels.LobbyViewModel lvm)
             {
                 lvm.JoinRequested += OnRoomJoinRequested;
             }
@@ -18,7 +23,7 @@ namespace BattleOfSea
 
         private void OnRoomJoinRequested(Models.Room? room)
         {
-            if (room == null) return;
+            if (room == null || _mainContent == null) return;
 
             // Create game view and viewmodel
             var gameView = new Views.GameView();
@@ -29,10 +34,13 @@ namespace BattleOfSea
             gvm.ExitRequested += () =>
             {
                 // Return to lobby
-                this.FindControl<ContentControl>("MainContent").Content = this.FindControl<Views.LobbyView>("LobbyViewControl");
+                if (_mainContent != null && _lobbyView != null)
+                {
+                    _mainContent.Content = _lobbyView;
+                }
             };
 
-            this.FindControl<ContentControl>("MainContent").Content = gameView;
+            _mainContent.Content = gameView;
         }
     }
 }

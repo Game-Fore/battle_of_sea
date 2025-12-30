@@ -8,6 +8,7 @@ namespace BattleOfSea.Models
         public bool IsPrivate { get; }
         public string? GameType { get; }
         public string PlayersDisplay => $"{Players}/{MaxPlayers}";
+        public bool IsJoinAllowed => Players < MaxPlayers;
 
         public Room(string name, int players, int maxPlayers)
             : this(name, players, maxPlayers, false, null)

@@ -14,7 +14,7 @@
                 <TextBlock Text="{Binding Name}" FontWeight="Bold" />
                 <TextBlock Text="{Binding PlayersDisplay}" FontSize="12" />
               </StackPanel>
-              <Button Content="Присоединиться" Command="{Binding DataContext.JoinCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalAlignment="Right" />
+              <Button Content="Присоединиться" Command="{Binding DataContext.JoinCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalAlignment="Right" IsEnabled="{Binding IsJoinAllowed}" />
             </StackPanel>
           </Border>
         </DataTemplate>

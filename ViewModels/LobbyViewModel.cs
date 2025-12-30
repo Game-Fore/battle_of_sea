@@ -9,6 +9,7 @@ namespace BattleOfSea.ViewModels
     public class LobbyViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<Models.Room> Rooms { get; } = new ObservableCollection<Models.Room>();
+        private readonly Services.INetworkService _networkService;
 
         private Models.Room? _selectedRoom;
         public Models.Room? SelectedRoom
@@ -23,8 +24,12 @@ namespace BattleOfSea.ViewModels
         public ICommand QuickStartCommand { get; }
         public ICommand ExitCommand { get; }
 
-        public LobbyViewModel()
+        public LobbyViewModel() : this(new Services.MockNetworkService()) { }
+
+        public LobbyViewModel(Services.INetworkService networkService)
         {
+            _networkService = networkService;
+
             // Static placeholder rooms (only free rooms are added to the visible list)
             var all = new[]
             {//
@@ -41,9 +46,9 @@ namespace BattleOfSea.ViewModels
                     Rooms.Add(r);
             }
 
-            JoinCommand = new Utils.RelayCommand(o => {
+            JoinCommand = new Utils.RelayCommand(async o => {
                 var room = o as Models.Room ?? SelectedRoom;
-                JoinRoom(room);
+                await JoinRoomAsync(room);
             });
 
             CreateRoomCommand = new Utils.RelayCommand(_ => Console.WriteLine("Create room clicked (default settings)"));
@@ -66,12 +71,28 @@ namespace BattleOfSea.ViewModels
                 Console.WriteLine($"Room not added (full or invalid): {room?.Name}");
             }
         }
-private void JoinRoom(Models.Room? room)
+
+        private async System.Threading.Tasks.Task JoinRoomAsync(Models.Room? room)
         {
-            if (room != null)
+            if (room == null) return;
+
+            Console.WriteLine($"Join requested: {room.Name}");
+            try
             {
-                Console.WriteLine($"Join requested: {room.Name}");
-                JoinRequested?.Invoke(room);
+                var ok = await _networkService.JoinRoomAsync(room);
+                if (ok)
+                {
+                    Console.WriteLine($"Joined room (mock): {room.Name}");
+                    JoinRequested?.Invoke(room);
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to join room: {room.Name}");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine($"Join error: {ex.Message}");
             }
         }
 

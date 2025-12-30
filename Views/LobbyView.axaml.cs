@@ -40,6 +40,13 @@ namespace BattleOfSea.Views
             win.DataContext = vm;
 
             var parent = this.VisualRoot as Avalonia.Controls.Window;
+            if (parent == null)
+            {
+                // If we can't find an owner window (rare), show modeless window as fallback
+                win.Show();
+                return;
+            }
+
             var result = await win.ShowDialog<bool?>(parent);
             if (result == true)
             {

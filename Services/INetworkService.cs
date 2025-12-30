@@ -1,7 +1,10 @@
+using System.Threading.Tasks;
+
 namespace BattleOfSea.Services
 {
     public interface INetworkService
     {
-        // Define network operations later (join room, create room, send shot, etc.)
+        Task<bool> JoinRoomAsync(Models.Room room);
+        Task<bool> CreateRoomAsync(Models.Room room);
     }
 }
