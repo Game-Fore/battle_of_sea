@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>false</UseWPF>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,5 +20,11 @@
     <!-- Treat AXAML as content so Avalonia build targets pick them up -->
     <None Include="Views\**\*.axaml" />
     <None Include="Controls\**\*.axaml" />
+  </ItemGroup>
+
+  <!-- Exclude test project sources from the main project compile -->
+  <ItemGroup>
+    <Compile Remove="Tests\**\*.cs" />
+    <None Remove="Tests\**\*" />
   </ItemGroup>
 </Project>

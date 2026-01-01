@@ -23,5 +23,27 @@ namespace BattleOfSea.Models
             var cell = GetCell(r, c);
             if (cell != null) cell.HasShip = true;
         }
+
+        /// <summary>
+        /// Shoot at a given cell. Returns true if hit, false if miss, null if already revealed or invalid.
+        /// </summary>
+        public bool? ShootAt(int r, int c)
+        {
+            var cell = GetCell(r, c);
+            if (cell == null) return null;
+            if (cell.IsRevealed) return null;
+
+            cell.IsRevealed = true;
+            if (cell.HasShip)
+            {
+                cell.IsHit = true;
+                return true;
+            }
+            else
+            {
+                cell.IsHit = false;
+                return false;
+            }
+        }
     }
 }

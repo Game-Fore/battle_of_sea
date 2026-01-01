@@ -3,6 +3,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BattleOfSea.App">
   <Application.Styles>
-    <!-- Theme will be configured later; leaving default for now -->
+    <!-- Using custom demo styles (no explicit FluentTheme element to avoid compatibility issues) -->
+    <!-- Shared resources and simple control styles for demo visuals -->
+    <Style Selector="Button">
+      <Setter Property="Padding" Value="8,6" />
+      <Setter Property="MinWidth" Value="120" />
+      <Setter Property="Background" Value="#0ea5a4" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderBrush" Value="#059669" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="TextBlock.badge">
+      <Setter Property="Background" Value="#065f46" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+
   </Application.Styles>
 </Application>

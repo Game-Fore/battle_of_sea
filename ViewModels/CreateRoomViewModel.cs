@@ -25,6 +25,10 @@ namespace BattleOfSea.ViewModels
 
         public ObservableCollection<string> GameTypes { get; } = new ObservableCollection<string> { "Classic", "Timed", "Custom" };
 
+        public CreateRoomViewModel()
+        {
+        }
+
         public bool CanCreate => !string.IsNullOrWhiteSpace(Name);
         public string NameError => CanCreate ? string.Empty : "Название комнаты обязательно";
 

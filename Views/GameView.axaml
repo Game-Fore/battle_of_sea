@@ -12,6 +12,6 @@
     </StackPanel>
 
     <controls:TimerControl HorizontalAlignment="Center" />
-    <views:BoardView />
+    <views:BoardView DataContext="{Binding}" />
   </StackPanel>
 </UserControl>

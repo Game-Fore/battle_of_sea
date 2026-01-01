@@ -12,7 +12,7 @@ namespace BattleOfSea.Views
         public BoardView()
         {
             InitializeComponent();
-            DataContext = new ViewModels.BoardViewModel();
+            // Do not set DataContext here; expect parent (GameView) to provide GameViewModel
         }
 
 
@@ -20,7 +20,15 @@ namespace BattleOfSea.Views
         {
             if (sender is Button b && b.Tag is Models.BoardCell cell)
             {
-                VM?.EnemyCellClick(cell);
+                // If the view is hosted inside GameView, call its Shoot handler
+                if (DataContext is ViewModels.GameViewModel gvm)
+                {
+                    gvm.ShootAt(cell);
+                }
+                else
+                {
+                    VM?.EnemyCellClick(cell);
+                }
             }
         }
     }
