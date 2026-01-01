@@ -1,0 +1,62 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{02375F47-CA5B-4765-A6FB-0BF85F5AF6F9}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\mainwindow.axaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{02375F47-CA5B-4765-A6FB-0BF85F5AF6F9}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\mainwindow.axaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{02375F47-CA5B-4765-A6FB-0BF85F5AF6F9}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\mainwindow.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{02375F47-CA5B-4765-A6FB-0BF85F5AF6F9}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\mainwindow.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.axaml",
+              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml",
+              "RelativeDocumentMoniker": "battle_sea\\MainWindow.axaml",
+              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml",
+              "RelativeToolTip": "battle_sea\\MainWindow.axaml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-01-01T11:41:26.424Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MainWindow.axaml.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml.cs",
+              "RelativeDocumentMoniker": "battle_sea\\MainWindow.axaml.cs",
+              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml.cs",
+              "RelativeToolTip": "battle_sea\\MainWindow.axaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-01T11:41:22.532Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
