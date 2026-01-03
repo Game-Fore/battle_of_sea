@@ -2,46 +2,21 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BattleOfSea.Views.BoardView">
-  <StackPanel Orientation="Horizontal" Spacing="12">
-    <StackPanel>
-      <TextBlock Text="Ваше поле" FontWeight="Bold" Margin="0,0,0,6" />
-      <ItemsControl Name="OwnGrid" ItemsSource="{Binding Own.Cells}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <WrapPanel Width="300" />
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Border BorderBrush="Gray" BorderThickness="1" Width="28" Height="28" Margin="1" Background="LightBlue">
-              <TextBlock Text="{Binding Display}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Border>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+  <StackPanel Orientation="Horizontal" Spacing="48" HorizontalAlignment="Center" Margin="16,0">
+    <!-- Мое поле -->
+    <StackPanel Margin="0,0,24,0">
+      <TextBlock Text="Мое поле" FontWeight="Bold" FontSize="16" Margin="0,0,0,8" HorizontalAlignment="Center" />
+      <Grid Name="OwnBoardGrid">
+        <!-- Grid будет создан в code-behind -->
+      </Grid>
     </StackPanel>
 
-    <StackPanel>
-      <TextBlock Text="Поле противника" FontWeight="Bold" Margin="0,0,0,6" />
-      <ItemsControl Name="EnemyGrid" ItemsSource="{Binding Enemy.Cells}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <WrapPanel Width="300" />
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Button Width="28" Height="28" Margin="1" Tag="{Binding}" Click="EnemyCell_Click">
-              <Button.Styles>
-                <Style Selector="Button:pointerover">
-                  <Setter Property="Background" Value="LightGoldenrodYellow" />
-                </Style>
-              </Button.Styles>
-              <TextBlock Text="{Binding Display}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Button>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+    <!-- Поле противника -->
+    <StackPanel Margin="24,0,0,0">
+      <TextBlock Text="Поле противника" FontWeight="Bold" FontSize="16" Margin="0,0,0,8" HorizontalAlignment="Center" />
+      <Grid Name="EnemyBoardGrid">
+        <!-- Grid будет создан в code-behind -->
+      </Grid>
     </StackPanel>
   </StackPanel>
 </UserControl>

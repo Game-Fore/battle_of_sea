@@ -43,15 +43,19 @@ namespace BattleOfSea
                     System.Console.WriteLine($"MainWindow show/activate error: {ex.Message}");
                 }
 
-                // In demo mode show a centered dialog so the user immediately sees a visible UI
+                // In demo mode, don't show dialog immediately - let user see the main window first
+                // User can close demo dialog if it appears, or it will close automatically
+                // Commented out for now so main window is immediately visible
+                /*
                 if (DemoMode && desktop.MainWindow != null)
                 {
-                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         try
                         {
                             var dlg = new Views.DemoDialog();
-                            await dlg.ShowDialog(desktop.MainWindow);
+                            // Show as non-modal window so main window is visible
+                            dlg.Show(desktop.MainWindow);
                         }
                         catch (System.Exception ex)
                         {
@@ -59,6 +63,7 @@ namespace BattleOfSea
                         }
                     });
                 }
+                */
             }
 
             base.OnFrameworkInitializationCompleted();

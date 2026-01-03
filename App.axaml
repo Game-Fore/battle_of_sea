@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BattleOfSea.App">
   <Application.Styles>
-    <!-- Using custom demo styles (no explicit FluentTheme element to avoid compatibility issues) -->
-    <!-- Shared resources and simple control styles for demo visuals -->
+    <FluentTheme />
+    <!-- Custom styles override FluentTheme defaults -->
     <Style Selector="Button">
       <Setter Property="Padding" Value="8,6" />
       <Setter Property="MinWidth" Value="120" />

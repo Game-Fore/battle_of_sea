@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:BattleOfSea.Views"
+             x:Class="BattleOfSea.Views.ShipPlacementView">
+  <StackPanel Margin="16" Spacing="16">
+    <TextBlock Text="Разместите все корабли на поле" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
+    
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*" Margin="0,0,0,0">
+      <!-- Левая панель с информацией о кораблях -->
+      <StackPanel Grid.Column="0" Grid.Row="1" Spacing="12" MinWidth="220">
+        <TextBlock Text="Корабли для размещения:" FontWeight="Bold" FontSize="14" />
+        <ItemsControl ItemsSource="{Binding ShipManager.Ships}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <TextBlock>
+                <Run Text="{Binding Size, StringFormat='{}{0}-палубный: '}" FontWeight="Bold" />
+                <Run Text="{Binding Placed}" Foreground="Green" />
+                <Run Text="/" />
+                <Run Text="{Binding Count}" />
+                <Run Text=" (" Foreground="Red" />
+                <Run Text="{Binding Remaining}" Foreground="Red" />
+                <Run Text=" осталось)" Foreground="Red" />
+              </TextBlock>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Separator Margin="0,8" />
+
+        <TextBlock Text="{Binding ShipManager.PlacedShips, StringFormat='Размещено: {0}'}" FontWeight="Bold" />
+        <TextBlock Text="{Binding ShipManager.TotalShips, StringFormat='Всего: {0}'}" />
+        <TextBlock Text="{Binding ShipManager.RemainingShips, StringFormat='Осталось: {0}'}" 
+                   Foreground="Red" FontWeight="Bold" />
+
+        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+          <Button Content="4" Command="{Binding SelectShipCommand}" CommandParameter="4" Width="40" />
+          <Button Content="3" Command="{Binding SelectShipCommand}" CommandParameter="3" Width="40" />
+          <Button Content="2" Command="{Binding SelectShipCommand}" CommandParameter="2" Width="40" />
+          <Button Content="1" Command="{Binding SelectShipCommand}" CommandParameter="1" Width="40" />
+        </StackPanel>
+        <Button Content="Повернуть" Command="{Binding RotateShipCommand}" />
+        <Button Content="Удалить корабль" Command="{Binding RemoveShipCommand}" />
+
+        <Button Content="Начать игру" Command="{Binding StartGameCommand}" 
+                IsEnabled="{Binding ShipManager.AllShipsPlaced}" 
+                Margin="0,12,0,0" FontSize="16" Padding="16,8" />
+      </StackPanel>
+
+      <!-- Правая панель с полем -->
+      <StackPanel Grid.Column="1" Grid.Row="1" Spacing="8">
+        <TextBlock Text="Ваше поле" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" />
+        <TextBlock Text="Кликните на поле чтобы разместить корабль" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+        <views:BoardView DataContext="{Binding}" />
+      </StackPanel>
+    </Grid>
+  </StackPanel>
+</UserControl>
