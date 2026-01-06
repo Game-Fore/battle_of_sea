@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BattleSea.ChatServer/BattleSea.ChatServer.csproj" Id="2762dffe-dc59-438d-81dc-9aef406351bf" />
+  <Project Path="battle_sea/battle_sea.csproj" />
+</Solution>
