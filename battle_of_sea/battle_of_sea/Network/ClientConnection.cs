@@ -1,13 +1,22 @@
-﻿using battle_of_sea.Protocol;
+﻿using battle_of_sea.Game;
+using battle_of_sea.Protocol;
 using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using battle_of_sea.Game;
 
 namespace battle_of_sea.Network
 {
+    public class GameServer
+    {
+        private static GameServer _instance;
+        public static GameServer Instance => _instance ??= new GameServer();
+
+        public GameManager GameManager { get; private set; } = new GameManager();
+    }
     public class ClientConnection
     {
         private readonly TcpClient _client;
@@ -91,6 +100,15 @@ namespace battle_of_sea.Network
                     string playerName = message.Payload.GetProperty("playerName").GetString();
                     string playerId = Guid.NewGuid().ToString();
 
+                    var player = new Player
+                    {
+                        Id = playerId,
+                        Name = playerName,
+                        Connection = this
+                    };
+
+                    GameServer.Instance.GameManager.AddPlayer(player);
+
                     await SendAsync(writer, new ServerMessage
                     {
                         Type = "connected",
@@ -99,6 +117,7 @@ namespace battle_of_sea.Network
 
                     Console.WriteLine($"Player connected: {playerName} ({playerId})");
                     break;
+
 
                 case "ping":
                     await SendAsync(writer, new ServerMessage
