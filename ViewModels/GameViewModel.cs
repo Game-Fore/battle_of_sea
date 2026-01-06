@@ -54,6 +54,10 @@ namespace BattleOfSea.ViewModels
         public Models.Board Enemy { get; } = new Models.Board(10);
         public ShipPlacementManager ShipManager { get; } = new ShipPlacementManager();
 
+        // Подсчет кораблей для отображения
+        public int OwnRemainingShips => Own.RemainingShipsCount();
+        public int EnemyRemainingShips => Enemy.RemainingShipsCount();
+
         private bool _shipsPlaced = false;
         public bool ShipsPlaced
         {
@@ -86,9 +90,23 @@ namespace BattleOfSea.ViewModels
             set { _isHorizontal = value; OnPropertyChanged(); }
         }
 
-        public GameViewModel(Models.Room? room = null)
+        private readonly Services.INetworkService? _networkService;
+        private string? _roomId;
+
+        public GameViewModel(Models.Room? room = null, Services.INetworkService? networkService = null)
         {
+            _networkService = networkService;
             RoomName = room?.Name;
+            _roomId = room?.Name;
+            
+            // Подписываемся на сетевые события
+            if (_networkService != null)
+            {
+                _networkService.ShootResultReceived += OnShootResultReceived;
+                _networkService.OpponentShootReceived += OnOpponentShootReceived;
+                _networkService.GameStateChanged += OnGameStateChanged;
+            }
+            
             // In demo mode, start with YourTurn so user can immediately interact
             if (App.DemoMode)
             {
@@ -209,6 +227,15 @@ namespace BattleOfSea.ViewModels
             // In demo mode, allow shooting even if not explicitly "YourTurn"
             if (!App.DemoMode && State != GameState.YourTurn) return;
 
+            // Отправляем выстрел через сеть, если есть подключение
+            if (_networkService != null && _roomId != null && _networkService.IsConnected)
+            {
+                await _networkService.SendShootAsync(cell.Row, cell.Col, _roomId);
+                // Результат придет через OnShootResultReceived
+                return;
+            }
+
+            // Локальная обработка (демо режим)
             var result = Enemy.ShootAt(cell.Row, cell.Col);
             if (result == true)
             {
@@ -279,6 +306,85 @@ namespace BattleOfSea.ViewModels
                 if (State != GameState.YouWin)
                     State = GameState.OpponentTurn;
             }
+
+            // Обновляем счетчики кораблей
+            OnPropertyChanged(nameof(OwnRemainingShips));
+            OnPropertyChanged(nameof(EnemyRemainingShips));
+        }
+
+        /// <summary>
+        /// Обработка выстрела противника по моему полю
+        /// </summary>
+        public bool? HandleOpponentShot(int row, int col)
+        {
+            if (State == GameState.YouWin || State == GameState.YouLose)
+                return null;
+
+            var result = Own.ShootAt(row, col);
+            if (result == true)
+            {
+                // Противник попал - проверяем потоплен ли корабль
+                var sunk = Own.IsShipSunkAt(row, col);
+                if (sunk == true)
+                {
+                    // Помечаем все ячейки потопленного корабля
+                    var ships = Own.GetShips();
+                    foreach (var ship in ships)
+                    {
+                        var cell = Own.GetCell(row, col);
+                        if (cell != null && ship.Contains(cell))
+                        {
+                            foreach (var shipCell in ship)
+                            {
+                                shipCell.IsSunk = true;
+                            }
+                            break;
+                        }
+                    }
+                    Console.WriteLine($"Opponent sunk ship at {row},{col}");
+                }
+                else
+                {
+                    Console.WriteLine($"Opponent hit at {row},{col}");
+                }
+
+                // Проверяем поражение
+                if (Own.AllShipsSunk())
+                {
+                    State = GameState.YouLose;
+                    Console.WriteLine("All your ships sunk — you lose!");
+                    ShowDefeatDialog();
+                    OnPropertyChanged(nameof(OwnRemainingShips));
+                    OnPropertyChanged(nameof(EnemyRemainingShips));
+                    return true;
+                }
+
+                OnPropertyChanged(nameof(OwnRemainingShips));
+                return true;
+            }
+            else if (result == false)
+            {
+                Console.WriteLine($"Opponent miss at {row},{col}");
+                OnPropertyChanged(nameof(OwnRemainingShips));
+                return false;
+            }
+
+            return null;
+        }
+
+        private async void ShowDefeatDialog()
+        {
+            await System.Threading.Tasks.Task.Delay(500);
+            Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+            {
+                var dialog = new Views.VictoryDialog(false);
+                var parent = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    ? desktop.MainWindow : null;
+                if (parent != null)
+                {
+                    await dialog.ShowDialog(parent);
+                }
+            });
         }
 
         public void RequestExit() => ExitRequested?.Invoke();
@@ -296,6 +402,94 @@ namespace BattleOfSea.ViewModels
                     await dialog.ShowDialog(parent);
                 }
             });
+        }
+
+        // Обработчики сетевых событий (День 9: Синхронизация состояний)
+        private async void OnShootResultReceived(Models.ShootResultMessage message)
+        {
+            var cell = Enemy.GetCell(message.Row, message.Col);
+            if (cell == null || cell.IsRevealed) return;
+
+            cell.IsRevealed = true;
+            cell.IsHit = message.IsHit;
+            
+            if (message.IsHit && message.IsSunk)
+            {
+                var ships = Enemy.GetShips();
+                foreach (var ship in ships)
+                {
+                    if (ship.Contains(cell))
+                    {
+                        foreach (var shipCell in ship)
+                        {
+                            shipCell.IsSunk = true;
+                        }
+                        break;
+                    }
+                }
+                State = GameState.Sunk;
+            }
+            else if (message.IsHit)
+            {
+                State = GameState.Hit;
+            }
+            else
+            {
+                State = GameState.Miss;
+            }
+
+            if (message.IsGameOver)
+            {
+                if (message.IsWinner)
+                {
+                    State = GameState.YouWin;
+                    ShowVictoryDialog();
+                }
+                else
+                {
+                    State = GameState.YouLose;
+                    ShowDefeatDialog();
+                }
+            }
+            else
+            {
+                await System.Threading.Tasks.Task.Delay(2000);
+                if (State != GameState.YouWin && State != GameState.YouLose)
+                {
+                    State = GameState.OpponentTurn;
+                }
+            }
+
+            OnPropertyChanged(nameof(EnemyRemainingShips));
+        }
+
+        private async void OnOpponentShootReceived(Models.ShootMessage message)
+        {
+            if (message.RoomId != _roomId) return;
+
+            var result = HandleOpponentShot(message.Row, message.Col);
+            if (result == true)
+            {
+                State = GameState.Hit;
+            }
+            else if (result == false)
+            {
+                State = GameState.Miss;
+            }
+
+            await System.Threading.Tasks.Task.Delay(2000);
+            if (State != GameState.YouWin && State != GameState.YouLose)
+            {
+                State = GameState.YourTurn;
+            }
+        }
+
+        private void OnGameStateChanged(Models.GameStateMessage message)
+        {
+            if (message.RoomId == _roomId)
+            {
+                State = message.State;
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

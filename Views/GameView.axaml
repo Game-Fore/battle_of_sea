@@ -20,6 +20,22 @@
                    VerticalAlignment="Center" Opacity="0.7" />
       </StackPanel>
 
+      <!-- День 12: UX улучшения - счетчики кораблей -->
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24" Margin="0,8">
+        <Border Padding="12,6" CornerRadius="8" Background="#E0E7FF">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Ваши корабли:" FontSize="14" FontWeight="Bold" />
+            <TextBlock Text="{Binding OwnRemainingShips}" FontSize="14" FontWeight="Bold" Foreground="#4338CA" />
+          </StackPanel>
+        </Border>
+        <Border Padding="12,6" CornerRadius="8" Background="#FEE2E2">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Корабли противника:" FontSize="14" FontWeight="Bold" />
+            <TextBlock Text="{Binding EnemyRemainingShips}" FontSize="14" FontWeight="Bold" Foreground="#DC2626" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
       <controls:TimerControl HorizontalAlignment="Center" />
       <views:BoardView DataContext="{Binding}" />
     </StackPanel>

@@ -6,19 +6,23 @@ namespace BattleOfSea
     {
         private ContentControl? _mainContent;
         private Views.LobbyView? _lobbyView;
+        private readonly Services.INetworkService _networkService;
 
         public MainWindow()
         {
             InitializeComponent();
 
+            // Инициализируем сетевой сервис (День 8-9: Сеть)
+            _networkService = new Services.MockNetworkService();
+
             // Cache controls and subscribe to lobby join requests
             _mainContent = this.FindControl<ContentControl>("MainContent");
             _lobbyView = this.FindControl<Views.LobbyView>("LobbyViewControl");
 
-            // Ensure LobbyView has DataContext (it should be set in its constructor, but double-check)
+            // Ensure LobbyView has DataContext с сетевым сервисом
             if (_lobbyView != null && _lobbyView.DataContext == null)
             {
-                _lobbyView.DataContext = new ViewModels.LobbyViewModel();
+                _lobbyView.DataContext = new ViewModels.LobbyViewModel(_networkService);
             }
 
             if (_lobbyView?.DataContext is ViewModels.LobbyViewModel lvm)
@@ -31,9 +35,9 @@ namespace BattleOfSea
         {
             if (room == null || _mainContent == null) return;
 
-            // Create game view and viewmodel
+            // Create game view and viewmodel с сетевым сервисом
             var gameView = new Views.GameView();
-            var gvm = new ViewModels.GameViewModel(room);
+            var gvm = new ViewModels.GameViewModel(room, _networkService);
             gameView.DataContext = gvm;
 
             // Subscribe to exit request

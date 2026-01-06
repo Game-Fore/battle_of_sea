@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
@@ -30,31 +31,84 @@ namespace BattleOfSea.ViewModels
         {
             _networkService = networkService;
 
-            // Static placeholder rooms (only free rooms are added to the visible list)
-            var all = new[]
-            {//
-                new Models.Room("Alpha", 1, 2),
-                new Models.Room("Bravo", 0, 2),
-                new Models.Room("Charlie", 2, 4),
-                new Models.Room("Delta", 1, 4),
-                new Models.Room("Echo (full)", 4, 4)
-            };
+            // Подписываемся на обновления списка комнат (День 10: Лобби онлайн)
+            _networkService.RoomsListUpdated += OnRoomsListUpdated;
+            _networkService.JoinRoomResult += OnJoinRoomResult;
 
-            foreach (var r in all)
-            {
-                if (r.Players < r.MaxPlayers)
-                    Rooms.Add(r);
-            }
+            // Загружаем комнаты с сервера
+            _ = LoadRoomsAsync();
 
             JoinCommand = new Utils.RelayCommand(async o => {
                 var room = o as Models.Room ?? SelectedRoom;
                 await JoinRoomAsync(room);
             });
 
-            CreateRoomCommand = new Utils.RelayCommand(_ => Console.WriteLine("Create room clicked (default settings)"));
-            RefreshCommand = new Utils.RelayCommand(_ => { Console.WriteLine("Refresh clicked"); });
+            CreateRoomCommand = new Utils.RelayCommand(async _ => await CreateRoomAsync());
+            RefreshCommand = new Utils.RelayCommand(async _ => await LoadRoomsAsync());
             QuickStartCommand = new Utils.RelayCommand(_ => Console.WriteLine("Quick Start clicked"));
             ExitCommand = new Utils.RelayCommand(_ => Console.WriteLine("Exit clicked"));
+        }
+
+        // День 10: Загрузка комнат с сервера
+        private async System.Threading.Tasks.Task LoadRoomsAsync()
+        {
+            try
+            {
+                var rooms = await _networkService.GetRoomsAsync();
+                Rooms.Clear();
+                foreach (var room in rooms)
+                {
+                    if (room.Players < room.MaxPlayers)
+                    {
+                        Rooms.Add(room);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine($"Error loading rooms: {ex.Message}");
+            }
+        }
+
+        private void OnRoomsListUpdated(Models.RoomsListMessage message)
+        {
+            Rooms.Clear();
+            foreach (var room in message.Rooms)
+            {
+                if (room.Players < room.MaxPlayers)
+                {
+                    Rooms.Add(room);
+                }
+            }
+        }
+
+        private async System.Threading.Tasks.Task CreateRoomAsync()
+        {
+            // Открываем окно создания комнаты
+            var createWindow = new Views.CreateRoomWindow();
+            var parent = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                ? desktop.MainWindow : null;
+            
+            if (parent != null)
+            {
+                var result = await createWindow.ShowDialog<Models.Room?>(parent);
+                if (result != null)
+                {
+                    var success = await _networkService.CreateRoomAsync(result);
+                    if (success)
+                    {
+                        AddRoom(result);
+                    }
+                }
+            }
+        }
+
+        private void OnJoinRoomResult(Models.JoinRoomMessage message)
+        {
+            if (message.Success)
+            {
+                JoinRequested?.Invoke(Rooms.FirstOrDefault(r => r.Name == message.RoomId));
+            }
         }
 
         public event Action<Models.Room?>? JoinRequested;
