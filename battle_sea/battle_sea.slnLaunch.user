@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Новый профиль",
+    "Projects": [
+      {
+        "Path": "battle_sea\\battle_sea.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "BattleSea.ChatServer\\BattleSea.ChatServer.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
