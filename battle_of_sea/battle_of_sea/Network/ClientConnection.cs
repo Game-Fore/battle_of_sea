@@ -108,7 +108,7 @@ namespace battle_of_sea.Network
                 case "shoot":
                     if (_player == null)
                     {
-                        await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Not connected" } });
+                        await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Not connected" } });
                         break;
                     }
 
@@ -118,7 +118,7 @@ namespace battle_of_sea.Network
                     var game = GameServer.Instance.GameManager.FindGameByPlayerId(_player.Id);
                     if (game == null)
                     {
-                        await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Not in a game" } });
+                        await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Not in a game" } });
                         break;
                     }
 
@@ -131,21 +131,25 @@ namespace battle_of_sea.Network
                     var opponent = game.GetOpponentPlayer();
                     bool hit = opponent.Board.Shoot(x, y);
 
-                    // Отправляем обоим игрокам
-                    await SendAsync( new ServerMessage
-                    {
-                        Type = "shoot_result",
-                        Payload = new { x, y, hit }
-                    });
+                    // Отправляем результат стреляющему
+                    await SendAsync(new ServerMessage { Type = "shoot_result", Payload = new { x, y, hit } });
 
-                    await opponent.Connection.SendAsync(new ServerMessage
-                    {
-                        Type = "opponent_shot",
-                        Payload = new { x, y, hit }
-                    });
+                    // Уведомление противнику
+                    await opponent.Connection.SendAsync(new ServerMessage { Type = "opponent_shot", Payload = new { x, y, hit } });
 
-                    game.SwitchTurn();
+                    // Проверяем победу
+                    if (opponent.Board.IsDefeated())
+                    {
+                        await SendAsync(new ServerMessage { Type = "game_over", Payload = new { winner = _player.Name } });
+                        await opponent.Connection.SendAsync(new ServerMessage { Type = "game_over", Payload = new { winner = _player.Name } });
+                    }
+                    else
+                    {
+                        // Передача хода
+                        game.SwitchTurn();
+                    }
                     break;
+
 
                 default:
                     await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Unknown command" } });

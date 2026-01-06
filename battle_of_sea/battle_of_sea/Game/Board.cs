@@ -37,5 +37,18 @@
 
             return false; // если уже было попадание/промах
         }
+        public bool IsDefeated()
+        {
+            for (int i = 0; i < Size; i++)
+            {
+                for (int j = 0; j < Size; j++)
+                {
+                    if (Cells[i, j] == CellState.Ship)
+                        return false; // есть хотя бы один корабль
+                }
+            }
+            return true; // кораблей не осталось
+        }
+
     }
 }

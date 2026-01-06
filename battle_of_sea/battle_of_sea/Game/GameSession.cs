@@ -16,9 +16,7 @@ namespace battle_of_sea.Game
             CurrentTurnPlayerId = Player1.Id; // первый ход Player1
         }
 
-        public Player GetCurrentPlayer() => Player1.Id == CurrentTurnPlayerId ? Player1 : Player2;
-        public Player GetOpponentPlayer() => Player1.Id == CurrentTurnPlayerId ? Player2 : Player1;
-
+        public Player GetOpponentPlayer() => CurrentTurnPlayerId == Player1.Id ? Player2 : Player1;
         public void SwitchTurn()
         {
             CurrentTurnPlayerId = GetOpponentPlayer().Id;
