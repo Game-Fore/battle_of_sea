@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BattleSea.ChatServer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c8b1c4b2e6d7fa83773f0656e8c05d2728a273fe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+62ed57a5b6727ad24dddc15e22e30ba633d9a7a8")]
 [assembly: System.Reflection.AssemblyProductAttribute("BattleSea.ChatServer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BattleSea.ChatServer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
