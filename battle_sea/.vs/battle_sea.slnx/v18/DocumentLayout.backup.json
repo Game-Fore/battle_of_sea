@@ -3,28 +3,32 @@
   "WorkspaceRootPath": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\models\\chat\\ichatservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\models\\chat\\ichatservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\app.axaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\app.axaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\models\\chat\\chatchannel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\models\\chat\\chatchannel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\app.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\app.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\models\\chat\\chatmessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\models\\chat\\chatmessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\battle_sea.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\battle_sea.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\mainwindow.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\mainwindow.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\mainwindow.axaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
       "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\mainwindow.axaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\mainwindow.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\mainwindow.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\views\\chatview.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\views\\chatview.axaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\viewmodels\\chatviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\viewmodels\\chatviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|c:\\users\\admin\\admin\\university\\2_year\\oop\\chat\\battle_sea\\battle_sea\\views\\chatview.axaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{4DFD02AF-FD11-52E1-ACB7-1D4A55A57487}|battle_sea\\battle_sea.csproj|solutionrelative:battle_sea\\views\\chatview.axaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
     }
   ],
   "DocumentGroupContainers": [
@@ -34,60 +38,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 7,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "IChatService.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\IChatService.cs",
-              "RelativeDocumentMoniker": "battle_sea\\Models\\Chat\\IChatService.cs",
-              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\IChatService.cs",
-              "RelativeToolTip": "battle_sea\\Models\\Chat\\IChatService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-02T03:11:29.719Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ChatChannel.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\ChatChannel.cs",
-              "RelativeDocumentMoniker": "battle_sea\\Models\\Chat\\ChatChannel.cs",
-              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\ChatChannel.cs",
-              "RelativeToolTip": "battle_sea\\Models\\Chat\\ChatChannel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-02T03:10:54.054Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "ChatMessage.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\ChatMessage.cs",
-              "RelativeDocumentMoniker": "battle_sea\\Models\\Chat\\ChatMessage.cs",
-              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\ChatMessage.cs",
-              "RelativeToolTip": "battle_sea\\Models\\Chat\\ChatMessage.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-02T03:10:14.669Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "battle_sea",
-              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\battle_sea.csproj",
-              "RelativeDocumentMoniker": "battle_sea\\battle_sea.csproj",
-              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\battle_sea.csproj",
-              "RelativeToolTip": "battle_sea\\battle_sea.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-01-02T03:09:11.481Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
@@ -114,28 +66,94 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "MainWindow.axaml",
-              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml",
-              "RelativeDocumentMoniker": "battle_sea\\MainWindow.axaml",
-              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml",
-              "RelativeToolTip": "battle_sea\\MainWindow.axaml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-01-01T11:41:26.424Z",
+              "DocumentIndex": 1,
+              "Title": "App.axaml.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\App.axaml.cs",
+              "RelativeDocumentMoniker": "battle_sea\\App.axaml.cs",
+              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\App.axaml.cs",
+              "RelativeToolTip": "battle_sea\\App.axaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-02T12:16:29.99Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 0,
+              "Title": "App.axaml",
+              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\App.axaml",
+              "RelativeDocumentMoniker": "battle_sea\\App.axaml",
+              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\App.axaml*",
+              "RelativeToolTip": "battle_sea\\App.axaml*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-01-02T12:16:20.546Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "MainWindow.axaml.cs",
               "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml.cs",
               "RelativeDocumentMoniker": "battle_sea\\MainWindow.axaml.cs",
               "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml.cs",
               "RelativeToolTip": "battle_sea\\MainWindow.axaml.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-01T11:41:22.532Z"
+              "WhenOpened": "2026-01-02T12:16:07.943Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MainWindow.axaml",
+              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml",
+              "RelativeDocumentMoniker": "battle_sea\\MainWindow.axaml",
+              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\MainWindow.axaml",
+              "RelativeToolTip": "battle_sea\\MainWindow.axaml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-01-02T12:15:46.882Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ChatViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\ViewModels\\ChatViewModel.cs",
+              "RelativeDocumentMoniker": "battle_sea\\ViewModels\\ChatViewModel.cs",
+              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\ViewModels\\ChatViewModel.cs",
+              "RelativeToolTip": "battle_sea\\ViewModels\\ChatViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-02T12:11:44.2Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ChatView.axaml.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Views\\ChatView.axaml.cs",
+              "RelativeDocumentMoniker": "battle_sea\\Views\\ChatView.axaml.cs",
+              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Views\\ChatView.axaml.cs",
+              "RelativeToolTip": "battle_sea\\Views\\ChatView.axaml.cs",
+              "ViewState": "AgIAAD0AAAAAAAAAAAAqwEoAAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-02T12:03:51.681Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ChatView.axaml",
+              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Views\\ChatView.axaml",
+              "RelativeDocumentMoniker": "battle_sea\\Views\\ChatView.axaml",
+              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Views\\ChatView.axaml",
+              "RelativeToolTip": "battle_sea\\Views\\ChatView.axaml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACcAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-01-02T12:00:15.998Z",
+              "EditorCaption": ""
             }
           ]
         }

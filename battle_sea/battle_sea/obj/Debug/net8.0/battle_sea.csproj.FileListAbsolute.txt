@@ -73,3 +73,11 @@ C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\obj\Debug\
 C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\obj\Debug\net8.0\battle_sea.pdb
 C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\obj\Debug\net8.0\battle_sea.genruntimeconfig.cache
 C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\obj\Debug\net8.0\ref\battle_sea.dll
+C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\bin\Debug\net8.0\DynamicData.dll
+C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\bin\Debug\net8.0\ReactiveUI.dll
+C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\bin\Debug\net8.0\ReactiveUI.Avalonia.dll
+C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\bin\Debug\net8.0\Splat.dll
+C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\bin\Debug\net8.0\Splat.Builder.dll
+C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\bin\Debug\net8.0\Splat.Core.dll
+C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\bin\Debug\net8.0\Splat.Logging.dll
+C:\Users\admin\admin\university\2_year\OOP\chat\battle_sea\battle_sea\bin\Debug\net8.0\System.Reactive.dll

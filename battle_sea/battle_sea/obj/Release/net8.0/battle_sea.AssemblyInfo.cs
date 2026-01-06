@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("battle_sea")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bb6f9d0edc472dc197394a83a8b20bd46438415d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7247a84c223078018c9071c5835b2b3bc51540cc")]
 [assembly: System.Reflection.AssemblyProductAttribute("battle_sea")]
 [assembly: System.Reflection.AssemblyTitleAttribute("battle_sea")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

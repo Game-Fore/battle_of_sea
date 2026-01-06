@@ -12,7 +12,9 @@
           "Avalonia.Desktop": "11.3.10",
           "Avalonia.Diagnostics": "11.3.10",
           "Avalonia.Fonts.Inter": "11.3.10",
-          "Avalonia.Themes.Fluent": "11.3.10"
+          "Avalonia.Themes.Fluent": "11.3.10",
+          "ReactiveUI": "22.3.1",
+          "ReactiveUI.Avalonia": "11.3.8"
         },
         "runtime": {
           "battle_sea.dll": {}
@@ -244,6 +246,17 @@
           }
         }
       },
+      "DynamicData/9.4.1": {
+        "dependencies": {
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net8.0/DynamicData.dll": {
+            "assemblyVersion": "9.4.0.0",
+            "fileVersion": "9.4.1.30094"
+          }
+        }
+      },
       "HarfBuzzSharp/8.3.1.1": {
         "dependencies": {
           "HarfBuzzSharp.NativeAssets.Win32": "8.3.1.1",
@@ -351,6 +364,32 @@
           }
         }
       },
+      "ReactiveUI/22.3.1": {
+        "dependencies": {
+          "DynamicData": "9.4.1",
+          "Splat": "17.1.1",
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net8.0/ReactiveUI.dll": {
+            "assemblyVersion": "22.3.0.0",
+            "fileVersion": "22.3.1.55961"
+          }
+        }
+      },
+      "ReactiveUI.Avalonia/11.3.8": {
+        "dependencies": {
+          "Avalonia": "11.3.10",
+          "ReactiveUI": "22.3.1",
+          "Splat": "17.1.1"
+        },
+        "runtime": {
+          "lib/net8.0/ReactiveUI.Avalonia.dll": {
+            "assemblyVersion": "11.3.0.0",
+            "fileVersion": "11.3.8.1"
+          }
+        }
+      },
       "SkiaSharp/2.88.9": {
         "dependencies": {
           "SkiaSharp.NativeAssets.Win32": "2.88.9",
@@ -418,11 +457,67 @@
           }
         }
       },
+      "Splat/17.1.1": {
+        "dependencies": {
+          "Splat.Builder": "17.1.1",
+          "Splat.Logging": "17.1.1",
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net8.0/Splat.dll": {
+            "assemblyVersion": "17.1.0.0",
+            "fileVersion": "17.1.1.49067"
+          }
+        }
+      },
+      "Splat.Builder/17.1.1": {
+        "dependencies": {
+          "Splat.Core": "17.1.1",
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net8.0/Splat.Builder.dll": {
+            "assemblyVersion": "17.1.0.0",
+            "fileVersion": "17.1.1.49067"
+          }
+        }
+      },
+      "Splat.Core/17.1.1": {
+        "dependencies": {
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net8.0/Splat.Core.dll": {
+            "assemblyVersion": "17.1.0.0",
+            "fileVersion": "17.1.1.49067"
+          }
+        }
+      },
+      "Splat.Logging/17.1.1": {
+        "dependencies": {
+          "Splat.Core": "17.1.1",
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net8.0/Splat.Logging.dll": {
+            "assemblyVersion": "17.1.0.0",
+            "fileVersion": "17.1.1.49067"
+          }
+        }
+      },
       "System.IO.Pipelines/8.0.0": {
         "runtime": {
           "lib/net8.0/System.IO.Pipelines.dll": {
             "assemblyVersion": "8.0.0.0",
             "fileVersion": "8.0.23.53103"
+          }
+        }
+      },
+      "System.Reactive/6.1.0": {
+        "runtime": {
+          "lib/net6.0/System.Reactive.dll": {
+            "assemblyVersion": "6.1.0.0",
+            "fileVersion": "6.1.0.62682"
           }
         }
       },
@@ -543,6 +638,13 @@
       "path": "avalonia.x11/11.3.10",
       "hashPath": "avalonia.x11.11.3.10.nupkg.sha512"
     },
+    "DynamicData/9.4.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+SoDTbuzY9j0K+sZfRbbVpGjjylkVMhUQnw6qiPhxzYLBJlwxFpmunXSaNBtTxwC2C9d/XIp0kO7VhMAVuUt7w==",
+      "path": "dynamicdata/9.4.1",
+      "hashPath": "dynamicdata.9.4.1.nupkg.sha512"
+    },
     "HarfBuzzSharp/8.3.1.1": {
       "type": "package",
       "serviceable": true,
@@ -578,6 +680,20 @@
       "path": "microcom.runtime/0.11.0",
       "hashPath": "microcom.runtime.0.11.0.nupkg.sha512"
     },
+    "ReactiveUI/22.3.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rCJ4PwXjpWZCKPXmq9N72chAO7L4EU9J14TlTO6ZI87kzrVHY+LSam8Kvkc6YctNbZA++ORiYuB/AOE8PqjrTg==",
+      "path": "reactiveui/22.3.1",
+      "hashPath": "reactiveui.22.3.1.nupkg.sha512"
+    },
+    "ReactiveUI.Avalonia/11.3.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8GtFnYCyjcuTlGuUhvMMrY/sUmjuzSQbbtNQ3LYZEW7tkzXixDYnHZzqZU73W+NOnq2sBxds7gSUO52igFWVUw==",
+      "path": "reactiveui.avalonia/11.3.8",
+      "hashPath": "reactiveui.avalonia.11.3.8.nupkg.sha512"
+    },
     "SkiaSharp/2.88.9": {
       "type": "package",
       "serviceable": true,
@@ -606,12 +722,47 @@
       "path": "skiasharp.nativeassets.win32/2.88.9",
       "hashPath": "skiasharp.nativeassets.win32.2.88.9.nupkg.sha512"
     },
+    "Splat/17.1.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-WwSoJ6aPHlXwWS2jfUtKQIgzQQDSuE/iGbqEFRcM1DKVQelf+XSfnaur6oAqzECobuJLC9nqUMeDH19gU6JDag==",
+      "path": "splat/17.1.1",
+      "hashPath": "splat.17.1.1.nupkg.sha512"
+    },
+    "Splat.Builder/17.1.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xlA5ErMwa/mg//uC5Ajv4ns3HbWXE0VJiyfupdsLfC+1HPf2MIUUk9ViYxwearB9nkZ+mAmteVD0keBhg/LYsQ==",
+      "path": "splat.builder/17.1.1",
+      "hashPath": "splat.builder.17.1.1.nupkg.sha512"
+    },
+    "Splat.Core/17.1.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-sRNcO9EcnrCMr2OF4IxD8gcHtIAfCi98GwVZEK9X294RQEBIsy7sHwy8fndlxLguIHvjDJMz85v+qd226pwdNw==",
+      "path": "splat.core/17.1.1",
+      "hashPath": "splat.core.17.1.1.nupkg.sha512"
+    },
+    "Splat.Logging/17.1.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-OSkQVj6/hYVHa0taPasaknuOLw4l8CH9oTFRNuFayDowhHtGg6+UQb2LeSJXV+EXRmUL2E/TFz2ucitnQyTXJQ==",
+      "path": "splat.logging/17.1.1",
+      "hashPath": "splat.logging.17.1.1.nupkg.sha512"
+    },
     "System.IO.Pipelines/8.0.0": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-FHNOatmUq0sqJOkTx+UF/9YK1f180cnW5FVqnQMvYUN0elp6wFzbtPSiqbo1/ru8ICp43JM1i7kKkk6GsNGHlA==",
       "path": "system.io.pipelines/8.0.0",
       "hashPath": "system.io.pipelines.8.0.0.nupkg.sha512"
+    },
+    "System.Reactive/6.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-M5cCC1ZMkZr9jbSQGTHnVkb5TDN67qWCV7AP8TAHdGkvDlu0puT5NzemESNn9+HkYIDpWpocP68/i+/ame2/2w==",
+      "path": "system.reactive/6.1.0",
+      "hashPath": "system.reactive.6.1.0.nupkg.sha512"
     },
     "Tmds.DBus.Protocol/0.21.2": {
       "type": "package",

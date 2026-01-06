@@ -9,6 +9,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\ChatChannel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Chat\\ChatChannel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\ChatMessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Chat\\ChatMessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -46,13 +50,26 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ChatMessage.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\ChatMessage.cs",
+              "RelativeDocumentMoniker": "Models\\Chat\\ChatMessage.cs",
+              "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\ChatMessage.cs",
+              "RelativeToolTip": "Models\\Chat\\ChatMessage.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-02T03:41:51.51Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
               "Title": "IChatService.cs",
               "DocumentMoniker": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\IChatService.cs",
               "RelativeDocumentMoniker": "Models\\Chat\\IChatService.cs",
               "ToolTip": "C:\\Users\\admin\\admin\\university\\2_year\\OOP\\chat\\battle_sea\\battle_sea\\Models\\Chat\\IChatService.cs",
               "RelativeToolTip": "Models\\Chat\\IChatService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAOAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-01-02T03:19:11.986Z",
               "EditorCaption": ""
@@ -67,7 +84,8 @@
               "RelativeToolTip": "Models\\Chat\\ChatChannel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-02T03:19:08.247Z"
+              "WhenOpened": "2026-01-02T03:19:08.247Z",
+              "EditorCaption": ""
             }
           ]
         }

@@ -1,8 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Models\\Chat"
+    "\\Models",
+    "\\Models\\Chat",
+    "\\Services"
   ],
-  "SelectedNode": "\\Models",
+  "SelectedNode": "\\Models\\Chat\\IChatService.cs",
   "PreviewInSolutionExplorer": false
 }
