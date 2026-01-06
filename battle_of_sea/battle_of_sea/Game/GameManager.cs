@@ -24,5 +24,10 @@ namespace battle_of_sea.Game
                 Console.WriteLine($"Game created: {p1.Name} vs {p2.Name}");
             }
         }
+        public GameSession FindGameByPlayerId(string playerId)
+        {
+            return ActiveGames.Find(g => g.Player1.Id == playerId || g.Player2.Id == playerId);
+        }
+
     }
 }

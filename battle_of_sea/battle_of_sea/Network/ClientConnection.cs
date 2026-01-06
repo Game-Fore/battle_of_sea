@@ -6,26 +6,25 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using battle_of_sea.Game;
 
 namespace battle_of_sea.Network
 {
-    public class GameServer
-    {
-        private static GameServer _instance;
-        public static GameServer Instance => _instance ??= new GameServer();
-
-        public GameManager GameManager { get; private set; } = new GameManager();
-    }
     public class ClientConnection
     {
         private readonly TcpClient _client;
+        private Player _player;
 
         public ClientConnection(TcpClient client)
         {
             _client = client;
         }
+        public class GameServer
+        {
+            private static GameServer _instance;
+            public static GameServer Instance => _instance ??= new GameServer();
 
+            public GameManager GameManager { get; private set; } = new GameManager();
+        }
         public async Task HandleAsync()
         {
             try
@@ -36,20 +35,12 @@ namespace battle_of_sea.Network
                     var reader = new StreamReader(stream, Encoding.UTF8);
                     var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
 
-                    var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true // Игнорируем регистр JSON
-                    };
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
                     while (true)
                     {
                         string line = await reader.ReadLineAsync();
-
-                        if (string.IsNullOrWhiteSpace(line))
-                        {
-                            // Игнорируем пустые строки
-                            continue;
-                        }
+                        if (string.IsNullOrWhiteSpace(line)) continue;
 
                         Console.WriteLine($"Received: {line}");
 
@@ -58,23 +49,15 @@ namespace battle_of_sea.Network
                         {
                             message = JsonSerializer.Deserialize<ClientMessage>(line, options);
                         }
-                        catch (JsonException)
+                        catch
                         {
-                            await SendAsync(writer, new ServerMessage
-                            {
-                                Type = "error",
-                                Payload = new { message = "Invalid JSON" }
-                            });
+                            await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Invalid JSON" } });
                             continue;
                         }
 
                         if (message == null || string.IsNullOrEmpty(message.Type))
                         {
-                            await SendAsync(writer, new ServerMessage
-                            {
-                                Type = "error",
-                                Payload = new { message = "Missing Type" }
-                            });
+                            await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Missing Type" } });
                             continue;
                         }
 
@@ -100,16 +83,16 @@ namespace battle_of_sea.Network
                     string playerName = message.Payload.GetProperty("playerName").GetString();
                     string playerId = Guid.NewGuid().ToString();
 
-                    var player = new Player
+                    _player = new Player
                     {
                         Id = playerId,
                         Name = playerName,
                         Connection = this
                     };
 
-                    GameServer.Instance.GameManager.AddPlayer(player);
+                    GameServer.Instance.GameManager.AddPlayer(_player);
 
-                    await SendAsync(writer, new ServerMessage
+                    await SendAsync( new ServerMessage
                     {
                         Type = "connected",
                         Payload = new { playerId }
@@ -118,27 +101,62 @@ namespace battle_of_sea.Network
                     Console.WriteLine($"Player connected: {playerName} ({playerId})");
                     break;
 
-
                 case "ping":
-                    await SendAsync(writer, new ServerMessage
+                    await SendAsync( new ServerMessage { Type = "pong", Payload = new { } });
+                    break;
+
+                case "shoot":
+                    if (_player == null)
                     {
-                        Type = "pong",
-                        Payload = new { }
+                        await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Not connected" } });
+                        break;
+                    }
+
+                    int x = message.Payload.GetProperty("x").GetInt32();
+                    int y = message.Payload.GetProperty("y").GetInt32();
+
+                    var game = GameServer.Instance.GameManager.FindGameByPlayerId(_player.Id);
+                    if (game == null)
+                    {
+                        await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Not in a game" } });
+                        break;
+                    }
+
+                    if (game.CurrentTurnPlayerId != _player.Id)
+                    {
+                        await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Not your turn" } });
+                        break;
+                    }
+
+                    var opponent = game.GetOpponentPlayer();
+                    bool hit = opponent.Board.Shoot(x, y);
+
+                    // Отправляем обоим игрокам
+                    await SendAsync( new ServerMessage
+                    {
+                        Type = "shoot_result",
+                        Payload = new { x, y, hit }
                     });
+
+                    await opponent.Connection.SendAsync(new ServerMessage
+                    {
+                        Type = "opponent_shot",
+                        Payload = new { x, y, hit }
+                    });
+
+                    game.SwitchTurn();
                     break;
 
                 default:
-                    await SendAsync(writer, new ServerMessage
-                    {
-                        Type = "error",
-                        Payload = new { message = "Unknown command" }
-                    });
+                    await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Unknown command" } });
                     break;
             }
         }
 
-        private Task SendAsync(StreamWriter writer, ServerMessage message)
+        public Task SendAsync(ServerMessage message)
         {
+            var stream = _client.GetStream();
+            var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
             string json = JsonSerializer.Serialize(message);
             return writer.WriteLineAsync(json);
         }

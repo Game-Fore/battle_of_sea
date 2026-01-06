@@ -8,5 +8,6 @@ namespace battle_of_sea.Game
         public string Name { get; set; }
         public ClientConnection Connection { get; set; }
         public bool IsReady {  get; set; } = false;
+        public Board Board { get; set; } =new Board();
     }
 }
