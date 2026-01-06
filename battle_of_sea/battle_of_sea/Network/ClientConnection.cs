@@ -1,4 +1,10 @@
-﻿using System.Net.Sockets;
+﻿using battle_of_sea.Protocol;
+using System;
+using System.IO;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace battle_of_sea.Network
 {
@@ -18,18 +24,52 @@ namespace battle_of_sea.Network
                 using (_client)
                 {
                     var stream = _client.GetStream();
-                    var buffer = new byte[1024];
+                    var reader = new StreamReader(stream, Encoding.UTF8);
+                    var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
+
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true // Игнорируем регистр JSON
+                    };
 
                     while (true)
                     {
-                        int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                        if (bytesRead == 0)
+                        string line = await reader.ReadLineAsync();
+
+                        if (string.IsNullOrWhiteSpace(line))
                         {
-                            break; // клиент отключился
+                            // Игнорируем пустые строки
+                            continue;
                         }
 
-                        var message = System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                        Console.WriteLine($"Received: {message}");
+                        Console.WriteLine($"Received: {line}");
+
+                        ClientMessage message;
+                        try
+                        {
+                            message = JsonSerializer.Deserialize<ClientMessage>(line, options);
+                        }
+                        catch (JsonException)
+                        {
+                            await SendAsync(writer, new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Invalid JSON" }
+                            });
+                            continue;
+                        }
+
+                        if (message == null || string.IsNullOrEmpty(message.Type))
+                        {
+                            await SendAsync(writer, new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Missing Type" }
+                            });
+                            continue;
+                        }
+
+                        await HandleMessageAsync(message, writer);
                     }
                 }
             }
@@ -41,6 +81,47 @@ namespace battle_of_sea.Network
             {
                 Console.WriteLine("Client disconnected");
             }
+        }
+
+        private async Task HandleMessageAsync(ClientMessage message, StreamWriter writer)
+        {
+            switch (message.Type.ToLower())
+            {
+                case "connect":
+                    string playerName = message.Payload.GetProperty("playerName").GetString();
+                    string playerId = Guid.NewGuid().ToString();
+
+                    await SendAsync(writer, new ServerMessage
+                    {
+                        Type = "connected",
+                        Payload = new { playerId }
+                    });
+
+                    Console.WriteLine($"Player connected: {playerName} ({playerId})");
+                    break;
+
+                case "ping":
+                    await SendAsync(writer, new ServerMessage
+                    {
+                        Type = "pong",
+                        Payload = new { }
+                    });
+                    break;
+
+                default:
+                    await SendAsync(writer, new ServerMessage
+                    {
+                        Type = "error",
+                        Payload = new { message = "Unknown command" }
+                    });
+                    break;
+            }
+        }
+
+        private Task SendAsync(StreamWriter writer, ServerMessage message)
+        {
+            string json = JsonSerializer.Serialize(message);
+            return writer.WriteLineAsync(json);
         }
     }
 }
