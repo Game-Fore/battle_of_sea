@@ -7,13 +7,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Network\" />
-    <Folder Include="Game\" />
-    <Folder Include="Logic\" />
-    <Folder Include="Taimers\" />
-    <Folder Include="Reconnect\" />
-    <Folder Include="Protocol\" />
-  </ItemGroup>
-
 </Project>
