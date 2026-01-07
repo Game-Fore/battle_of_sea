@@ -8,12 +8,13 @@ namespace battle_of_sea.Game
     {
         public Player Player1 { get; }
         public Player Player2 { get; }
+        public bool IsFinished { get; private set; }
 
         public string CurrentTurnPlayerId { get; private set; }
 
         private readonly System.Timers.Timer _turnTimer;
         private const int TurnTimeMs = 30_000; // 30 секунд
-
+        
         public GameSession(Player p1, Player p2)
         {
             Player1 = p1;
@@ -76,26 +77,28 @@ namespace battle_of_sea.Game
 
             var opponent = GetOpponentPlayer();
 
-            bool hit = opponent.Board.Shoot(x, y);
+            var result = opponent.Board.Shoot(x, y);
+
 
             // Результат стреляющему
             await shooter.Connection.SendAsync(new ServerMessage
             {
                 Type = "shoot_result",
-                Payload = new { x, y, hit }
+                Payload = new { x, y, result = result.ToString() }
             });
 
             // Результат противнику
             await opponent.Connection.SendAsync(new ServerMessage
             {
                 Type = "opponent_shot",
-                Payload = new { x, y, hit }
+                Payload = new { x, y, result = result.ToString() }
             });
 
             // Победа?
             if (opponent.Board.IsDefeated())
             {
                 _turnTimer.Stop();
+                
 
                 await shooter.Connection.SendAsync(new ServerMessage
                 {
@@ -108,7 +111,7 @@ namespace battle_of_sea.Game
                     Type = "game_over",
                     Payload = new { winner = shooter.Name }
                 });
-
+                IsFinished = true;
                 return;
             }
 

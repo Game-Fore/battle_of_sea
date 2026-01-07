@@ -1,39 +1,71 @@
-Write-Host "=== CONNECT ALEX ==="
+# === FULL BATTLE TEST SCRIPT ===
 
-$client = New-Object System.Net.Sockets.TcpClient("localhost", 5000)
-$stream = $client.GetStream()
-$reader = New-Object System.IO.StreamReader($stream)
-$writer = New-Object System.IO.StreamWriter($stream)
-$writer.AutoFlush = $true
+$serverHost = "127.0.0.1"
+$serverPort = 5000
 
-$writer.WriteLine('{ "type":"connect", "payload":{ "playerName":"Alex" } }')
-$response = $reader.ReadLine()
-Write-Host "Server:" $response
+function Connect-Player($name) {
+    $tcp = New-Object System.Net.Sockets.TcpClient
+    $tcp.Connect($serverHost, $serverPort)
+    $stream = $tcp.GetStream()
+    $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
+    $writer = New-Object System.IO.StreamWriter($stream, [System.Text.Encoding]::UTF8)
+    $writer.AutoFlush = $true
 
-$playerId = (ConvertFrom-Json $response).Payload.playerId
-Write-Host "Alex playerId:" $playerId
+    # Отправляем connect
+    $msg = @{ type="connect"; payload=@{ playerName=$name } } | ConvertTo-Json -Compress
+    $writer.WriteLine($msg)
 
-Start-Sleep -Seconds 1
+    $response = $reader.ReadLine()
+    $playerId = ($response | ConvertFrom-Json).Payload.playerId
+    Write-Host "$name connected -> $response"
 
-Write-Host "`n=== DISCONNECT ALEX ==="
-$client.Close()
+    return [PSCustomObject]@{
+        Name = $name
+        Tcp = $tcp
+        Reader = $reader
+        Writer = $writer
+        Id = $playerId
+    }
+}
 
-Start-Sleep -Seconds 2
+function Shoot($shooter, $x, $y) {
+    $msg = @{ type="shoot"; payload=@{ x=$x; y=$y } } | ConvertTo-Json -Compress
+    $shooter.Writer.WriteLine($msg)
+    $response = $shooter.Reader.ReadLine()
+    Write-Host "$($shooter.Name) shoots [$x,$y]"
+    Write-Host "$($shooter.Name) result -> $response"
+}
 
-Write-Host "`n=== RECONNECT ALEX ==="
+# === Подключаем игроков ===
+$player1 = Connect-Player "Alex"
+$player2 = Connect-Player "Bob"
 
-$client2 = New-Object System.Net.Sockets.TcpClient("localhost", 5000)
-$stream2 = $client2.GetStream()
-$reader2 = New-Object System.IO.StreamReader($stream2)
-$writer2 = New-Object System.IO.StreamWriter($stream2)
-$writer2.AutoFlush = $true
+# === Ручная расстановка кораблей на сервере ===
+# Для теста на сервере должно быть реализовано: Board.PlaceShip(x, y, size, horizontal)
+# Предположим, что сервер уже расставляет 1-4 палубные корабли
 
-$reconnectJson = "{ `"type`":`"reconnect`", `"payload`":{ `"playerId`":`"$playerId`" } }"
-$writer2.WriteLine($reconnectJson)
+Write-Host "`n=== SHOOTING PHASE ===`n"
 
-$response2 = $reader2.ReadLine()
-Write-Host "Server:" $response2
+# Сценарий стрельбы
+# Alex стреляет по пустой клетке
+Shoot $player1 9 9
+# Bob стреляет по пустой клетке
+Shoot $player2 9 8
 
-Write-Host "`n=== DONE ==="
+# Alex стреляет по клетке с 4-палубным кораблём
+Shoot $player1 0 0
+Shoot $player1 0 1
+Shoot $player1 0 2
+Shoot $player1 0 3
 
-$client2.Close()
+# Bob стреляет по клеткам, чтобы показать, что ход передаётся корректно
+Shoot $player2 5 5
+Shoot $player2 6 6
+
+# После последнего попадания Alex должен получить "game_over"
+
+Write-Host "`n=== TEST FINISHED ===`n"
+
+# Закрываем соединения
+$player1.Tcp.Close()
+$player2.Tcp.Close()

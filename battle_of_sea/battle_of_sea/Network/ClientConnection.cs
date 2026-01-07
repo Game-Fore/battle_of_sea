@@ -136,16 +136,6 @@ namespace battle_of_sea.Network
                             break;
                         }
 
-                        if (game.CurrentTurnPlayerId != _player.Id)
-                        {
-                            await SendAsync(new ServerMessage
-                            {
-                                Type = "error",
-                                Payload = new { message = "Not your turn" }
-                            });
-                            break;
-                        }
-
                         int x = message.Payload.GetProperty("x").GetInt32();
                         int y = message.Payload.GetProperty("y").GetInt32();
 

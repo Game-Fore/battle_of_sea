@@ -7,48 +7,75 @@
         Hit,
         Miss
     }
-
+    public enum ShotResult
+    {
+        Miss,
+        Hit,
+        Sunk,
+        AlreadyShot
+    }
+    
     public class Board
     {
+        
         public const int Size = 10;
         public CellState[,] Cells { get; private set; } = new CellState[Size, Size];
+        public List<Ship> Ships { get; } = new();
 
         public Board() { }
 
-        // Разместить корабль по координатам (простая заглушка)
-        public void PlaceShip(int x, int y)
+        public bool PlaceShip(int x, int y, int size, bool horizontal)
         {
-            Cells[x, y] = CellState.Ship;
+            var cells = new List<(int x, int y)>();
+
+
+            for (int i = 0; i < size; i++)
+            {
+                int cx = horizontal ? x + i : x;
+                int cy = horizontal ? y : y + i;
+
+                if (cx < 0 || cy < 0 || cx >= Size || cy >= Size)
+                    return false;
+
+                if (Cells[cx, cy] != CellState.Empty)
+                    return false;
+
+                cells.Add((cx, cy));
+            }
+
+            var ship = new Ship();
+            foreach (var c in cells)
+            {
+                Cells[c.x, c.y] = CellState.Ship;
+                ship.Cells.Add(c);
+            }
+
+            Ships.Add(ship);
+            return true;
         }
 
-        // Попадание
-        public bool Shoot(int x, int y)
+        public ShotResult Shoot(int x, int y)
         {
+            if (Cells[x, y] == CellState.Hit || Cells[x, y] == CellState.Miss)
+                return ShotResult.AlreadyShot;
+
             if (Cells[x, y] == CellState.Ship)
             {
                 Cells[x, y] = CellState.Hit;
-                return true;
-            }
-            else if (Cells[x, y] == CellState.Empty)
-            {
-                Cells[x, y] = CellState.Miss;
-                return false;
+
+                var ship = Ships.First(s => s.Contains(x, y));
+                ship.RegisterHit(x, y);
+
+                return ship.IsSunk
+                    ? ShotResult.Sunk
+                    : ShotResult.Hit;
             }
 
-            return false; // если уже было попадание/промах
+            Cells[x, y] = CellState.Miss;
+            return ShotResult.Miss;
         }
-        public bool IsDefeated()
-        {
-            for (int i = 0; i < Size; i++)
-            {
-                for (int j = 0; j < Size; j++)
-                {
-                    if (Cells[i, j] == CellState.Ship)
-                        return false; // есть хотя бы один корабль
-                }
-            }
-            return true; // кораблей не осталось
-        }
+
+        public bool IsDefeated() => Ships.Count > 0 && Ships.All(s => s.IsSunk);
 
     }
 }
