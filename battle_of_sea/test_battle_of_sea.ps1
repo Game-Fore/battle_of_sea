@@ -1,89 +1,39 @@
-# ----------------------------------------
-# Полный тест TCP JSON для battle_of_sea
-# ----------------------------------------
+Write-Host "=== CONNECT ALEX ==="
 
-function Connect-Player($name) {
-    $client = New-Object System.Net.Sockets.TcpClient("127.0.0.1",5000)
-    $stream = $client.GetStream()
-    $writer = New-Object System.IO.StreamWriter($stream,[System.Text.Encoding]::UTF8)
-    $writer.AutoFlush = $true
-    $reader = New-Object System.IO.StreamReader($stream,[System.Text.Encoding]::UTF8)
+$client = New-Object System.Net.Sockets.TcpClient("localhost", 5000)
+$stream = $client.GetStream()
+$reader = New-Object System.IO.StreamReader($stream)
+$writer = New-Object System.IO.StreamWriter($stream)
+$writer.AutoFlush = $true
 
-    # Подключение
-    $json = '{ "type":"connect", "payload":{ "playerName":"'+$name+'" } }'
-    Write-Host "$name connecting: $json"
-    $writer.Write("$json`n")
-    Write-Host "Server response: $($reader.ReadLine())"
+$writer.WriteLine('{ "type":"connect", "payload":{ "playerName":"Alex" } }')
+$response = $reader.ReadLine()
+Write-Host "Server:" $response
 
-    return @{Client=$client; Writer=$writer; Reader=$reader; Name=$name}
-}
+$playerId = (ConvertFrom-Json $response).Payload.playerId
+Write-Host "Alex playerId:" $playerId
 
-# -----------------------
-# Подключаем игроков
-# -----------------------
-$player1 = Connect-Player "Alex"
-$player2 = Connect-Player "Bob"
+Start-Sleep -Seconds 1
 
-Start-Sleep -Milliseconds 500
+Write-Host "`n=== DISCONNECT ALEX ==="
+$client.Close()
 
-Write-Host "Test ships placed (серверная доска) — 3 клетки на каждого"
+Start-Sleep -Seconds 2
 
-# -----------------------
-# Функция выстрела
-# -----------------------
-function Shoot($shooter, $target, $x, $y) {
-    $json = '{ "type":"shoot", "payload":{ "x":'+$x+', "y":'+$y+' } }'
-    $shooter.Writer.Write("$json`n")
+Write-Host "`n=== RECONNECT ALEX ==="
 
-    $result = $shooter.Reader.ReadLine()
-    Write-Host "$($shooter.Name) shot: $result"
+$client2 = New-Object System.Net.Sockets.TcpClient("localhost", 5000)
+$stream2 = $client2.GetStream()
+$reader2 = New-Object System.IO.StreamReader($stream2)
+$writer2 = New-Object System.IO.StreamWriter($stream2)
+$writer2.AutoFlush = $true
 
-    $opponentResult = $target.Reader.ReadLine()
-    Write-Host "$($target.Name) sees opponent shot: $opponentResult"
+$reconnectJson = "{ `"type`":`"reconnect`", `"payload`":{ `"playerId`":`"$playerId`" } }"
+$writer2.WriteLine($reconnectJson)
 
-    # Возвращаем флаг game_over
-    if ($result -match '"game_over"') { return $true }
-    return $false
-}
+$response2 = $reader2.ReadLine()
+Write-Host "Server:" $response2
 
-# -----------------------
-# Генератор случайных координат для выстрелов
-# -----------------------
-$usedCoordinates = @{}
-function Get-RandomCoordinates {
-    do {
-        $x = Get-Random -Minimum 0 -Maximum 10
-        $y = Get-Random -Minimum 0 -Maximum 10
-    } while ($usedCoordinates["$x,$y"])
-    $usedCoordinates["$x,$y"] = $true
-    return @($x,$y)
-}
+Write-Host "`n=== DONE ==="
 
-# -----------------------
-# Цикл игры
-# -----------------------
-$gameOver = $false
-$currentShooter = $player1
-$currentTarget  = $player2
-
-while (-not $gameOver) {
-    $coords = Get-RandomCoordinates
-    $x = $coords[0]
-    $y = $coords[1]
-
-    $gameOver = Shoot $currentShooter $currentTarget $x $y
-
-    # Меняем ход
-    $temp = $currentShooter
-    $currentShooter = $currentTarget
-    $currentTarget = $temp
-
-    Start-Sleep -Milliseconds 200
-}
-
-# -----------------------
-# Закрываем соединения
-# -----------------------
-$player1.Writer.Close(); $player1.Reader.Close(); $player1.Client.Close()
-$player2.Writer.Close(); $player2.Reader.Close(); $player2.Client.Close()
-Write-Host "Connections closed"
+$client2.Close()

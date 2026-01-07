@@ -32,8 +32,8 @@ namespace battle_of_sea.Network
                 using (_client)
                 {
                     var stream = _client.GetStream();
-                    var reader = new StreamReader(stream, Encoding.UTF8);
-                    var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
+                    var reader = new StreamReader(stream, new UTF8Encoding(false));
+                    var writer = new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
 
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -71,7 +71,13 @@ namespace battle_of_sea.Network
             }
             finally
             {
-                Console.WriteLine("Client disconnected");
+                if (_player != null)
+                {
+                    Console.WriteLine($"Player disconnected: {_player.Name}");
+                    // ❗ НЕ удаляем игрока из игры
+                    // он может переподключиться
+                }
+                ;
             }
         }
 
@@ -80,76 +86,109 @@ namespace battle_of_sea.Network
             switch (message.Type.ToLower())
             {
                 case "connect":
-                    string playerName = message.Payload.GetProperty("playerName").GetString();
-                    string playerId = Guid.NewGuid().ToString();
-
-                    _player = new Player
                     {
-                        Id = playerId,
-                        Name = playerName,
-                        Connection = this
-                    };
+                        string playerName = message.Payload.GetProperty("playerName").GetString();
+                        string playerId = Guid.NewGuid().ToString();
 
-                    GameServer.Instance.GameManager.AddPlayer(_player);
+                        _player = new Player
+                        {
+                            Id = playerId,
+                            Name = playerName,
+                            Connection = this
+                        };
 
-                    await SendAsync( new ServerMessage
-                    {
-                        Type = "connected",
-                        Payload = new { playerId }
-                    });
+                        GameServer.Instance.GameManager.AddPlayer(_player);
 
-                    Console.WriteLine($"Player connected: {playerName} ({playerId})");
-                    break;
+                        await SendAsync(new ServerMessage
+                        {
+                            Type = "connected",
+                            Payload = new { playerId }
+                        });
 
+                        Console.WriteLine($"Player connected: {playerName} ({playerId})");
+                        break;
+                    }
                 case "ping":
                     await SendAsync( new ServerMessage { Type = "pong", Payload = new { } });
                     break;
 
                 case "shoot":
-                    if (_player == null)
+                   
                     {
-                        await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Not connected" } });
+                        if (_player == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Not connected" }
+                            });
+                            break;
+                        }
+
+                        var game = GameServer.Instance.GameManager.FindGameByPlayerId(_player.Id);
+                        if (game == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Not in a game" }
+                            });
+                            break;
+                        }
+
+                        if (game.CurrentTurnPlayerId != _player.Id)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Not your turn" }
+                            });
+                            break;
+                        }
+
+                        int x = message.Payload.GetProperty("x").GetInt32();
+                        int y = message.Payload.GetProperty("y").GetInt32();
+
+                        await game.ProcessShotAsync(_player, x, y);
+
+                        break;
+                    }
+                case "reconnect":
+                    {
+                        string playerId = message.Payload.GetProperty("playerId").GetString();
+
+                        var player = GameServer.Instance.GameManager.FindPlayerById(playerId);
+                        if (player == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Player not found" }
+                            });
+                            break;
+                        }
+
+                        // 🔄 Перепривязываем соединение
+                        player.Connection = this;
+                        _player = player;
+
+                        await SendAsync(new ServerMessage
+                        {
+                            Type = "reconnected",
+                            Payload = new
+                            {
+                                playerId = player.Id,
+                                opponent = GameServer.Instance.GameManager
+                                    .FindGameByPlayerId(player.Id)
+                                    ?.GetOpponentPlayer().Name
+                            }
+                        });
+
+                        Console.WriteLine($"Player reconnected: {player.Name}");
                         break;
                     }
 
-                    int x = message.Payload.GetProperty("x").GetInt32();
-                    int y = message.Payload.GetProperty("y").GetInt32();
-
-                    var game = GameServer.Instance.GameManager.FindGameByPlayerId(_player.Id);
-                    if (game == null)
-                    {
-                        await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Not in a game" } });
-                        break;
-                    }
-
-                    if (game.CurrentTurnPlayerId != _player.Id)
-                    {
-                        await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Not your turn" } });
-                        break;
-                    }
-
-                    var opponent = game.GetOpponentPlayer();
-                    bool hit = opponent.Board.Shoot(x, y);
-
-                    // Отправляем результат стреляющему
-                    await SendAsync(new ServerMessage { Type = "shoot_result", Payload = new { x, y, hit } });
-
-                    // Уведомление противнику
-                    await opponent.Connection.SendAsync(new ServerMessage { Type = "opponent_shot", Payload = new { x, y, hit } });
-
-                    // Проверяем победу
-                    if (opponent.Board.IsDefeated())
-                    {
-                        await SendAsync(new ServerMessage { Type = "game_over", Payload = new { winner = _player.Name } });
-                        await opponent.Connection.SendAsync(new ServerMessage { Type = "game_over", Payload = new { winner = _player.Name } });
-                    }
-                    else
-                    {
-                        // Передача хода
-                        game.SwitchTurn();
-                    }
-                    break;
-
+                
 
                 default:
                     await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Unknown command" } });
@@ -160,9 +199,10 @@ namespace battle_of_sea.Network
         public Task SendAsync(ServerMessage message)
         {
             var stream = _client.GetStream();
-            var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
+            var writer = new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
             string json = JsonSerializer.Serialize(message);
             return writer.WriteLineAsync(json);
         }
+
     }
 }

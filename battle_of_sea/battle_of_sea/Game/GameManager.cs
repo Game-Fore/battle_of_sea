@@ -28,6 +28,15 @@ namespace battle_of_sea.Game
         {
             return ActiveGames.Find(g => g.Player1.Id == playerId || g.Player2.Id == playerId);
         }
+        public Player FindPlayerById(string playerId)
+        {
+            foreach (var game in ActiveGames)
+            {
+                if (game.Player1.Id == playerId) return game.Player1;
+                if (game.Player2.Id == playerId) return game.Player2;
+            }
+            return null;
+        }
 
     }
 }
