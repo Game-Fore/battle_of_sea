@@ -21,7 +21,7 @@ namespace battle_sea.ViewModels
 
         public ChatViewModel(IChatService chatService)
         {
-            _chatService = chatService;
+            _chatService = new SignalRChatService();
 
             // Инициализируем коллекции
             AvailableChannels = new ObservableCollection<string>(

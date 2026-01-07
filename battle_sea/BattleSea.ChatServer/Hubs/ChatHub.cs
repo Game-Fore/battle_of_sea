@@ -9,14 +9,12 @@ namespace BattleSea.ChatServer.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            Console.WriteLine($"✅ Новый пользователь подключился: {Context.ConnectionId}");
-            await Clients.Caller.SendAsync("ReceiveMessage", "System", "Вы подключены к серверу чата!");
+            await Clients.Caller.SendAsync("ReceiveSystemMessage", "Добро пожаловать в чат!");
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            Console.WriteLine($"❌ Пользователь отключился: {Context.ConnectionId}");
             if (_users.TryRemove(Context.ConnectionId, out var userName))
             {
                 await Clients.All.SendAsync("ReceiveMessage", "System", $"{userName} покинул чат");
@@ -26,20 +24,39 @@ namespace BattleSea.ChatServer.Hubs
 
         public async Task Register(string userName)
         {
-            Console.WriteLine($"📝 Регистрация: {userName} (ConnectionId: {Context.ConnectionId})");
             _users[Context.ConnectionId] = userName;
-            await Clients.All.SendAsync("ReceiveMessage", "System", $"{userName} присоединился к чату");
+            await Clients.Caller.SendAsync("ReceiveSystemMessage", $"Вы зарегистрированы как {userName}");
+            await Clients.Others.SendAsync("ReceiveMessage", "System", $"{userName} присоединился к чату");
         }
 
-        public async Task SendMessage(string user, string message)
+        public async Task SendMessage(string message)
         {
-            Console.WriteLine($"💬 Сообщение от {user}: {message}");
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
+            if (_users.TryGetValue(Context.ConnectionId, out var userName))
+            {
+                await Clients.All.SendAsync("ReceiveMessage", userName, message);
+            }
         }
 
-        public async Task<string[]> GetOnlineUsers()
+        public async Task SendPrivateMessage(string targetUserName, string message)
         {
-            return _users.Values.ToArray();
+            if (_users.TryGetValue(Context.ConnectionId, out var senderName))
+            {
+                // Находим получателя
+                var receiver = _users.FirstOrDefault(x => x.Value == targetUserName);
+
+                if (!string.IsNullOrEmpty(receiver.Key))
+                {
+                    // Отправляем отправителю
+                    await Clients.Caller.SendAsync("ReceiveMessage", $"[Приватно] {senderName}", message);
+
+                    // Отправляем получателю
+                    await Clients.Client(receiver.Key).SendAsync("ReceiveMessage", $"[Приватно] {senderName}", message);
+                }
+                else
+                {
+                    await Clients.Caller.SendAsync("ReceiveSystemMessage", $"Пользователь {targetUserName} не найден");
+                }
+            }
         }
     }
 }
