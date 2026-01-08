@@ -22,8 +22,6 @@ namespace BattleOfSea.ViewModels
         public ICommand JoinCommand { get; }
         public ICommand CreateRoomCommand { get; }
         public ICommand RefreshCommand { get; }
-        public ICommand QuickStartCommand { get; }
-        public ICommand ExitCommand { get; }
 
         public LobbyViewModel() : this(new Services.MockNetworkService()) { }
 
@@ -45,8 +43,6 @@ namespace BattleOfSea.ViewModels
 
             CreateRoomCommand = new Utils.RelayCommand(async _ => await CreateRoomAsync());
             RefreshCommand = new Utils.RelayCommand(async _ => await LoadRoomsAsync());
-            QuickStartCommand = new Utils.RelayCommand(_ => Console.WriteLine("Quick Start clicked"));
-            ExitCommand = new Utils.RelayCommand(_ => Console.WriteLine("Exit clicked"));
         }
 
         // День 10: Загрузка комнат с сервера
@@ -98,6 +94,8 @@ namespace BattleOfSea.ViewModels
                     if (success)
                     {
                         AddRoom(result);
+                        // Автоматически присоединяемся к созданной комнате
+                        await JoinRoomAsync(result);
                     }
                 }
             }

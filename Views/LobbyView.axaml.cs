@@ -47,16 +47,15 @@ namespace BattleOfSea.Views
                 return;
             }
 
-            var result = await win.ShowDialog<bool?>(parent);
-            if (result == true)
+            var result = await win.ShowDialog<Models.Room?>(parent);
+            if (result != null)
             {
-                // create room with 0 players initially
-                var room = new Models.Room(vm.Name, 0, vm.MaxPlayers, vm.IsPrivate, vm.SelectedGameType);
                 if (DataContext is ViewModels.LobbyViewModel lvm)
                 {
-                    lvm.AddRoom(room);
-                    // auto-join created room
-                    lvm.JoinCommand.Execute(room);
+                    // Комната уже создана в CreateRoomWindow, просто добавляем и присоединяемся
+                    lvm.AddRoom(result);
+                    // auto-join созданной комнаты - это вызовет JoinRequested и откроет игру
+                    lvm.JoinCommand.Execute(result);
                 }
                 else
                 {

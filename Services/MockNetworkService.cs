@@ -22,7 +22,9 @@ namespace BattleOfSea.Services
         public event Action<RoomsListMessage>? RoomsListUpdated;
         public event Action<JoinRoomMessage>? JoinRoomResult;
         public event Action<UserConnectedMessage>? UserConnected;
+        #pragma warning disable CS0067 // Event is never used - reserved for future use
         public event Action<string>? ConnectionError;
+        #pragma warning restore CS0067
 
         public MockNetworkService()
         {

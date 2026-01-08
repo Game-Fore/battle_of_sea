@@ -23,7 +23,8 @@
 
               <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
                 <TextBlock Classes="badge" Text="{Binding PlayersDisplay}" VerticalAlignment="Center" />
-                <Button Content="Присоединиться" Command="{Binding DataContext.JoinCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding IsJoinAllowed}" />
+                <Button Content="Присоединиться" Command="{Binding DataContext.JoinCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding IsJoinAllowed}" 
+                        HorizontalContentAlignment="Center" />
               </StackPanel>
             </Grid>
           </Border>
@@ -32,10 +33,12 @@
     </ListBox>
 
     <StackPanel Grid.Row="1" Grid.Column="1" Margin="8" VerticalAlignment="Top" Spacing="8">
-      <Button Content="Создать комнату" Click="CreateRoom_Click" />
-      <Button Content="Обновить список" Command="{Binding RefreshCommand}" />
-      <Button Content="Быстрый старт" Command="{Binding QuickStartCommand}" />
-      <Button Content="Выйти" Command="{Binding ExitCommand}" />
+      <Button Content="Создать комнату" Click="CreateRoom_Click" 
+              Width="200" FontSize="14" HorizontalAlignment="Stretch" 
+              HorizontalContentAlignment="Center" />
+      <Button Content="Обновить список" Command="{Binding RefreshCommand}" 
+              Width="200" FontSize="14" HorizontalAlignment="Stretch" 
+              HorizontalContentAlignment="Center" />
     </StackPanel>
   </Grid>
 </UserControl>

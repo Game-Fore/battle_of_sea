@@ -12,7 +12,7 @@ namespace BattleOfSea.Views
 
         private void Cancel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            this.Close(false);
+            this.Close((Models.Room?)null);
         }
 
         private void Create_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -21,18 +21,21 @@ namespace BattleOfSea.Views
             if (vm == null)
             {
                 Console.WriteLine("CreateRoom: DataContext not set");
+                this.Close((Models.Room?)null);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(vm.Name))
             {
                 Console.WriteLine("CreateRoom: name is required");
+                this.Close((Models.Room?)null);
                 return;
             }
 
-            Console.WriteLine($"Creating room: {vm.Name}, private={vm.IsPrivate}, max={vm.MaxPlayers}, type={vm.SelectedGameType}");
-            // Return true to indicate creation
-            this.Close(true);
+            // Создаем комнату с 0 игроками изначально
+            var room = new Models.Room(vm.Name, 0, vm.MaxPlayers, vm.IsPrivate, null);
+            Console.WriteLine($"Creating room: {room.Name}, private={room.IsPrivate}, max={room.MaxPlayers}");
+            this.Close(room);
         }
     }
 }

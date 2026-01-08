@@ -107,15 +107,12 @@ namespace BattleOfSea.ViewModels
                 _networkService.GameStateChanged += OnGameStateChanged;
             }
             
-            // In demo mode, start with YourTurn so user can immediately interact
-            if (App.DemoMode)
-            {
-                State = GameState.YourTurn;
-            }
-            else if (RoomName != null)
+            // В демо-режиме тоже нужно размещать корабли, поэтому начинаем с ожидания
+            if (RoomName != null)
             {
                 State = GameState.WaitingForOpponent;
             }
+            // State будет установлен в YourTurn после размещения всех кораблей
 
             // Example enemy ships (for demo/test) -- in real game these come from server
             // Place several ships for a more interesting demo
@@ -129,25 +126,9 @@ namespace BattleOfSea.ViewModels
             Enemy.PlaceShip(8, 2);
             Enemy.PlaceShip(8, 3); // 3-cell ship
 
-            // In demo mode, auto-place ships for quick testing
-            if (App.DemoMode)
-            {
-                // Place demo ships
-                Own.PlaceShip(1, 1);
-                Own.PlaceShip(1, 2);
-                Own.PlaceShip(3, 5);
-                Own.PlaceShip(5, 2);
-                Own.PlaceShip(5, 3);
-                Own.PlaceShip(7, 6);
-                Own.PlaceShip(7, 7);
-                Own.PlaceShip(9, 4);
-                ShipsPlaced = true;
-            }
-            else
-            {
-                // In real game, user must place ships
-                ShipsPlaced = false;
-            }
+            // В демо-режиме тоже нужно размещать корабли вручную
+            // In demo mode, user must place ships (same as real game)
+            ShipsPlaced = false;
 
             ShootCommand = new Utils.RelayCommand(o => {
                 if (o is Models.BoardCell cell) _ = ShootAt(cell);
@@ -190,6 +171,8 @@ namespace BattleOfSea.ViewModels
             if (Own.PlaceShip(r, c, size, horizontal))
             {
                 ShipManager.PlaceShip(size);
+                // Уведомляем об изменении ShipManager для обновления UI счетчиков
+                OnPropertyChanged(nameof(ShipManager));
                 OnPropertyChanged(nameof(StartGameCommand));
                 return true;
             }
@@ -214,6 +197,8 @@ namespace BattleOfSea.ViewModels
                 {
                     Own.RemoveShip(r, c);
                     ShipManager.RemoveShip(ship.Count);
+                    // Уведомляем об изменении ShipManager для обновления UI счетчиков
+                    OnPropertyChanged(nameof(ShipManager));
                     OnPropertyChanged(nameof(StartGameCommand));
                     break;
                 }
@@ -295,8 +280,11 @@ namespace BattleOfSea.ViewModels
             // In demo mode, immediately return to YourTurn so user can keep playing
             if (App.DemoMode)
             {
-                if (State != GameState.YouWin)
+                if (State != GameState.YouWin && State != GameState.YouLose)
+                {
                     State = GameState.YourTurn;
+                    // Таймер перезапустится автоматически через событие PropertyChanged
+                }
             }
             else
             {
@@ -310,6 +298,52 @@ namespace BattleOfSea.ViewModels
             // Обновляем счетчики кораблей
             OnPropertyChanged(nameof(OwnRemainingShips));
             OnPropertyChanged(nameof(EnemyRemainingShips));
+        }
+
+        /// <summary>
+        /// Обработка истечения времени на ход
+        /// </summary>
+        public void HandleTimeExpired()
+        {
+            if (State == GameState.YourTurn && ShipsPlaced)
+            {
+                Console.WriteLine("Time expired - switching to opponent turn");
+                State = GameState.OpponentTurn;
+                
+                // Симулируем выстрел противника
+                if (App.DemoMode)
+                {
+                    _ = SimulateOpponentShot();
+                }
+            }
+        }
+
+        private async System.Threading.Tasks.Task SimulateOpponentShot()
+        {
+            await System.Threading.Tasks.Task.Delay(1000);
+            
+            // Случайный выстрел противника
+            var random = new Random();
+            var row = random.Next(0, 10);
+            var col = random.Next(0, 10);
+            
+            var cell = Own.GetCell(row, col);
+            if (cell != null && !cell.IsRevealed)
+            {
+                HandleOpponentShot(row, col);
+                
+                // После выстрела противника возвращаем ход игроку
+                await System.Threading.Tasks.Task.Delay(2000);
+                if (State != GameState.YouWin && State != GameState.YouLose)
+                {
+                    State = GameState.YourTurn;
+                }
+            }
+            else
+            {
+                // Если ячейка уже открыта, пробуем еще раз
+                _ = SimulateOpponentShot();
+            }
         }
 
         /// <summary>
