@@ -1,3 +1,4 @@
+// Логика игры
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -88,6 +89,12 @@ namespace BattleOfSea.Views
                     gvm.RequestExit();
                 }
             }
+        }
+
+        private void OpenChat_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            // Placeholder для открытия чата
+            // Когда второй разработчик закончит чат, можно будет вызвать его здесь
         }
     }
 }

@@ -1,3 +1,4 @@
+// Главное окно
 using Avalonia.Controls;
 
 namespace BattleOfSea

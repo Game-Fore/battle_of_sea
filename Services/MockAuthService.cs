@@ -1,3 +1,4 @@
+// Мок аутх
 using System;
 using System.Threading.Tasks;
 using BattleOfSea.Models;

@@ -1,3 +1,4 @@
+// Рендер поля
 using Avalonia.Controls;
 using Avalonia.Media;
 using System;
@@ -111,8 +112,17 @@ namespace BattleOfSea.Views
 
             int size = board.Size;
 
+                // Устанавливаем фиксированный размер для квадратного поля 10x10
+                int totalSize = HeaderSize + size * CellSize; // 28 + 10*30 = 328 пикселей
+                grid.Width = totalSize;
+                grid.Height = totalSize;
+                grid.MinWidth = totalSize;
+                grid.MaxWidth = totalSize;
+                grid.MinHeight = totalSize;
+                grid.MaxHeight = totalSize;
+
             // Create column definitions: header + size columns (all same size)
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new Avalonia.Controls.GridLength(HeaderSize, Avalonia.Controls.GridUnitType.Pixel) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new Avalonia.Controls.GridLength(HeaderSize, Avalonia.Controls.GridUnitType.Pixel), MinWidth = HeaderSize, MaxWidth = HeaderSize });
             for (int i = 0; i < size; i++)
             {
                 // Ensure all columns have exactly the same width
@@ -120,7 +130,7 @@ namespace BattleOfSea.Views
             }
 
             // Create row definitions: header + size rows (all same size)
-            grid.RowDefinitions.Add(new RowDefinition { Height = new Avalonia.Controls.GridLength(HeaderSize, Avalonia.Controls.GridUnitType.Pixel) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new Avalonia.Controls.GridLength(HeaderSize, Avalonia.Controls.GridUnitType.Pixel), MinHeight = HeaderSize, MaxHeight = HeaderSize });
             for (int i = 0; i < size; i++)
             {
                 // Ensure all rows have exactly the same height

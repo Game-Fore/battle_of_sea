@@ -1,3 +1,4 @@
+// Таймер визуал
 using Avalonia.Controls;
 using System;
 using System.ComponentModel;
@@ -6,6 +7,7 @@ using System.Threading;
 
 namespace BattleOfSea.Controls
 {
+    // Таймер управления
     public partial class TimerControl : UserControl, INotifyPropertyChanged
     {
         private string _timeLeftText = "00:30";
@@ -36,6 +38,7 @@ namespace BattleOfSea.Controls
             DataContext = this;
         }
 
+        // Запустить таймер
         public void StartTimer(int seconds = 30)
         {
             StopTimer();
@@ -44,6 +47,7 @@ namespace BattleOfSea.Controls
             _timer = new Timer(TimerCallback, null, 1000, 1000);
         }
 
+        // Остановить таймер
         public void StopTimer()
         {
             _isRunning = false;
@@ -51,12 +55,14 @@ namespace BattleOfSea.Controls
             _timer = null;
         }
 
+        // Сброс таймера
         public void ResetTimer(int seconds = 30)
         {
             StopTimer();
             TimeLeftSeconds = seconds;
         }
 
+        // Обратный вызов
         private void TimerCallback(object? state)
         {
             if (!_isRunning) return;
@@ -75,6 +81,7 @@ namespace BattleOfSea.Controls
             });
         }
 
+        // Время истекло
         public event Action? OnTimeExpired;
 
         protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)

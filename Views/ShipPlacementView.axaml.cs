@@ -1,28 +1,23 @@
+// Экран расстановки
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Input;
 using System;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace BattleOfSea.Views
 {
+    // Разметка поля
     public partial class ShipPlacementView : UserControl
     {
         private const int CellSize = 30;
         private const int HeaderSize = 28;
-        private System.Collections.Generic.Dictionary<Models.BoardCell, Control> _cellControls = new();
+
+        private Dictionary<Models.BoardCell, Border> _cellControls = new();
 
         public ShipPlacementView()
         {
             InitializeComponent();
-        }
-
-        protected override void OnDataContextChanged(EventArgs e)
-        {
-            base.OnDataContextChanged(e);
-            if (IsInitialized)
-            {
-                BuildPlacementBoard();
-            }
         }
 
         protected override void OnInitialized()
@@ -31,169 +26,171 @@ namespace BattleOfSea.Views
             BuildPlacementBoard();
         }
 
+        // Построить поле
         private void BuildPlacementBoard()
         {
             if (DataContext is ViewModels.GameViewModel gvm)
-            {
                 BuildBoard(PlacementBoardGrid, gvm.Own, gvm);
-            }
         }
 
+        protected override void OnDataContextChanged(EventArgs e)
+        {
+            base.OnDataContextChanged(e);
+            if (IsInitialized)
+                BuildPlacementBoard();
+        }
+
+        // Построить сетку
         private void BuildBoard(Grid grid, Models.Board board, ViewModels.GameViewModel gvm)
         {
             grid.Children.Clear();
             grid.ColumnDefinitions.Clear();
             grid.RowDefinitions.Clear();
+            _cellControls.Clear();
 
             int size = board.Size;
-            
-            // Устанавливаем фиксированный размер для квадратного поля 10x10
-            int totalSize = HeaderSize + size * CellSize; // 28 + 10*30 = 328 пикселей
+            int totalSize = HeaderSize + size * CellSize;
+
             grid.Width = totalSize;
             grid.Height = totalSize;
             grid.MinWidth = totalSize;
-            grid.MaxWidth = totalSize;
             grid.MinHeight = totalSize;
+            grid.MaxWidth = totalSize;
             grid.MaxHeight = totalSize;
 
-            // Create column definitions: header + size columns (all same size)
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(HeaderSize, GridUnitType.Pixel) });
+            grid.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
+            grid.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
+
+            // === COLUMNS ===
+            grid.ColumnDefinitions.Add(
+                new ColumnDefinition(new GridLength(HeaderSize, GridUnitType.Pixel)));
+
             for (int i = 0; i < size; i++)
             {
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(CellSize, GridUnitType.Pixel), MinWidth = CellSize, MaxWidth = CellSize });
+                grid.ColumnDefinitions.Add(
+                    new ColumnDefinition(new GridLength(CellSize, GridUnitType.Pixel)));
             }
 
-            // Create row definitions: header + size rows (all same size)
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(HeaderSize, GridUnitType.Pixel) });
+            // === ROWS ===
+            grid.RowDefinitions.Add(
+                new RowDefinition(new GridLength(HeaderSize, GridUnitType.Pixel)));
+
             for (int i = 0; i < size; i++)
             {
-                grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(CellSize, GridUnitType.Pixel), MinHeight = CellSize, MaxHeight = CellSize });
+                grid.RowDefinitions.Add(
+                    new RowDefinition(new GridLength(CellSize, GridUnitType.Pixel)));
             }
 
-            // Add column headers (A-J)
+            // === COLUMN HEADERS ===
             for (int col = 0; col < size; col++)
             {
-                var headerBorder = new Border
-                {
-                    Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
-                    ZIndex = 10
-                };
-                var header = new TextBlock
+                var text = new TextBlock
                 {
                     Text = ((char)('A' + col)).ToString(),
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                     FontWeight = FontWeight.Bold,
                     FontSize = 12,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0))
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
                 };
-                headerBorder.Child = header;
-                Grid.SetColumn(headerBorder, col + 1);
-                Grid.SetRow(headerBorder, 0);
-                grid.Children.Add(headerBorder);
+
+                Grid.SetRow(text, 0);
+                Grid.SetColumn(text, col + 1);
+                grid.Children.Add(text);
             }
 
-            // Add row headers (1-10)
+            // === ROW HEADERS ===
             for (int row = 0; row < size; row++)
             {
-                var headerBorder = new Border
-                {
-                    Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
-                    ZIndex = 10
-                };
-                var header = new TextBlock
+                var text = new TextBlock
                 {
                     Text = (row + 1).ToString(),
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                     FontWeight = FontWeight.Bold,
                     FontSize = 12,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0))
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
                 };
-                headerBorder.Child = header;
-                Grid.SetColumn(headerBorder, 0);
-                Grid.SetRow(headerBorder, row + 1);
-                grid.Children.Add(headerBorder);
+
+                Grid.SetRow(text, row + 1);
+                Grid.SetColumn(text, 0);
+                grid.Children.Add(text);
             }
 
-            // Add cells - только свое поле для размещения
+            // === CELLS ===
             foreach (var cell in board.Cells)
             {
-                var button = new Button
+                var border = new Border
                 {
-                    Tag = cell,
                     Background = GetCellBackground(cell),
                     BorderBrush = cell.CellBorderBrush,
                     BorderThickness = new Avalonia.Thickness(cell.CellBorderThickness),
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
+                    Width = CellSize,
+                    Height = CellSize,
                     Padding = new Avalonia.Thickness(0),
-                    Margin = new Avalonia.Thickness(0)
+                    Margin = new Avalonia.Thickness(0),
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch
                 };
 
-                button.Click += (s, e) =>
-                {
-                    if (gvm.SelectedShipSize.HasValue)
-                    {
-                        var success = gvm.PlaceShip(cell.Row, cell.Col, gvm.SelectedShipSize.Value, gvm.IsHorizontal);
-                        if (success)
-                        {
-                            BuildPlacementBoard(); // Rebuild to update
-                            // ShipManager сам уведомляет об изменениях через INotifyPropertyChanged
-                        }
-                    }
-                };
-
-                var textBlock = new TextBlock
+                var text = new TextBlock
                 {
                     Text = GetCellDisplay(cell),
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                     FontSize = 14,
-                    FontWeight = FontWeight.Bold
+                    FontWeight = FontWeight.Bold,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
                 };
-                button.Content = textBlock;
 
-                Grid.SetColumn(button, cell.Col + 1);
-                Grid.SetRow(button, cell.Row + 1);
-                grid.Children.Add(button);
-                _cellControls[cell] = button;
-                cell.PropertyChanged += (s, e) =>
+                border.Child = text;
+
+                border.PointerPressed += (s, e) =>
                 {
-                    if (_cellControls.TryGetValue(cell, out var control) && control is Button btn)
+                    var point = e.GetCurrentPoint(border);
+
+                    if (point.Properties.IsRightButtonPressed && cell.HasShip)
                     {
-                        btn.Background = GetCellBackground(cell);
-                        btn.BorderBrush = cell.CellBorderBrush;
-                        btn.BorderThickness = new Avalonia.Thickness(cell.CellBorderThickness);
-                        if (btn.Content is TextBlock tb)
+                        gvm.RemoveShip(cell.Row, cell.Col);
+                        BuildPlacementBoard();
+                        e.Handled = true;
+                        return;
+                    }
+
+                    if (point.Properties.IsLeftButtonPressed &&
+                        gvm.SelectedShipSize.HasValue)
+                    {
+                        if (gvm.PlaceShip(
+                            cell.Row,
+                            cell.Col,
+                            gvm.SelectedShipSize.Value,
+                            gvm.IsHorizontal))
                         {
-                            tb.Text = GetCellDisplay(cell);
+                            BuildPlacementBoard();
                         }
                     }
                 };
+
+                Grid.SetRow(border, cell.Row + 1);
+                Grid.SetColumn(border, cell.Col + 1);
+                grid.Children.Add(border);
+
+                _cellControls[cell] = border;
             }
         }
 
+        // Цвет ячейки
         private IBrush GetCellBackground(Models.BoardCell cell)
         {
-            if (cell.IsSunk) return new SolidColorBrush(Color.FromRgb(220, 38, 38));
-            if (cell.IsHit) return new SolidColorBrush(Color.FromRgb(252, 165, 165));
-            if (cell.HasShip) return new SolidColorBrush(Color.FromRgb(147, 197, 253));
-            return new SolidColorBrush(Color.FromRgb(219, 234, 254));
+            if (cell.IsSunk) return Brushes.Red;
+            if (cell.IsHit) return Brushes.OrangeRed;
+            if (cell.HasShip) return Brushes.LightBlue;
+            return Brushes.AliceBlue;
         }
 
+        // Текст ячейки
         private string GetCellDisplay(Models.BoardCell cell)
         {
             if (cell.IsSunk) return "💥";
-            if (cell.IsRevealed && cell.IsHit) return "✕";
-            if (cell.IsRevealed && !cell.IsHit) return "·";
             if (cell.HasShip) return "⛵";
             return string.Empty;
         }
     }
 }
-

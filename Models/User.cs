@@ -1,3 +1,4 @@
+// Пользователь модели
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 

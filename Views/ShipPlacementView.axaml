@@ -1,67 +1,155 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Экран расстановки -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:views="clr-namespace:BattleOfSea.Views"
              x:Class="BattleOfSea.Views.ShipPlacementView">
-  <StackPanel Margin="16" Spacing="16">
-    <TextBlock Text="Разместите все корабли на поле" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
-    
-    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*" Margin="0,0,0,0">
-      <!-- Левая панель с информацией о кораблях -->
-      <StackPanel Grid.Column="0" Grid.Row="1" Spacing="12" MinWidth="220">
-        <TextBlock Text="Корабли для размещения:" FontWeight="Bold" FontSize="14" />
+
+  <!-- ВАЖНО: никаких StackPanel вокруг поля -->
+  <Grid Margin="16"
+        ColumnDefinitions="Auto,32,Auto"
+        RowDefinitions="Auto,Auto">
+
+    <!-- Заголовок -->
+    <TextBlock Grid.ColumnSpan="3"
+               Grid.Row="0"
+               Text="Разместите все корабли на поле"
+               FontSize="20"
+               FontWeight="Bold"
+               HorizontalAlignment="Center"
+               Margin="0,0,0,16"/>
+
+    <!-- Левая панель -->
+    <Border Grid.Column="0"
+            Grid.Row="1"
+            Padding="12"
+            Background="#F8FAFF"
+            MinWidth="260"
+            CornerRadius="6"
+            VerticalAlignment="Top">
+
+      <StackPanel>
+        <TextBlock Text="Корабли для размещения"
+                   FontWeight="Bold"
+                   FontSize="14"
+                   Margin="0,0,0,8"/>
+
         <ItemsControl ItemsSource="{Binding ShipManager.Ships}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <TextBlock>
-                <Run Text="{Binding Size, StringFormat='{}{0}-палубный: '}" FontWeight="Bold" />
-                <Run Text="{Binding Placed}" Foreground="Green" />
-                <Run Text="/" />
-                <Run Text="{Binding Count}" />
-                <Run Text=" (" Foreground="Red" />
-                <Run Text="{Binding Remaining}" Foreground="Red" />
-                <Run Text=" осталось)" Foreground="Red" />
-              </TextBlock>
+              <StackPanel Orientation="Horizontal"
+                          Spacing="8"
+                          VerticalAlignment="Center">
+                <TextBlock Text="{Binding Size, StringFormat='{}{0}-палубный:'}"
+                           FontWeight="Bold"
+                           Width="120"/>
+                <TextBlock Text="{Binding Placed}" Foreground="Green"/>
+                <TextBlock Text="/"/>
+                <TextBlock Text="{Binding Count}"/>
+                <TextBlock Text=" (" Foreground="Red"/>
+                <TextBlock Text="{Binding Remaining}" Foreground="Red"/>
+                <TextBlock Text=") осталось" Foreground="Red"/>
+              </StackPanel>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <Separator Margin="0,8" />
+        <Separator Margin="0,8"/>
 
-        <TextBlock Text="{Binding ShipManager.PlacedShips, StringFormat='Размещено: {0}'}" FontWeight="Bold" />
-        <TextBlock Text="{Binding ShipManager.TotalShips, StringFormat='Всего: {0}'}" />
-        <TextBlock Text="{Binding ShipManager.RemainingShips, StringFormat='Осталось: {0}'}" 
-                   Foreground="Red" FontWeight="Bold" />
+        <TextBlock Text="{Binding ShipManager.PlacedShips, StringFormat='Размещено: {0}'}"
+                   FontWeight="Bold"/>
+        <TextBlock Text="{Binding ShipManager.TotalShips, StringFormat='Всего: {0}'}"/>
+        <TextBlock Text="{Binding ShipManager.RemainingShips, StringFormat='Осталось: {0}'}"
+                   Foreground="Red"
+                   FontWeight="Bold"/>
 
-        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
-          <Button Content="4" Command="{Binding SelectShipCommand}" CommandParameter="4" Width="40" 
-                  HorizontalContentAlignment="Center" />
-          <Button Content="3" Command="{Binding SelectShipCommand}" CommandParameter="3" Width="40" 
-                  HorizontalContentAlignment="Center" />
-          <Button Content="2" Command="{Binding SelectShipCommand}" CommandParameter="2" Width="40" 
-                  HorizontalContentAlignment="Center" />
-          <Button Content="1" Command="{Binding SelectShipCommand}" CommandParameter="1" Width="40" 
-                  HorizontalContentAlignment="Center" />
+        <StackPanel Orientation="Horizontal"
+                    Spacing="8"
+                    HorizontalAlignment="Center"
+                    Margin="0,16,0,0">
+          <Button Content="4"
+                  Command="{Binding SelectShipCommand}"
+                  CommandParameter="4"
+                  Width="44"
+                  Height="36"/>
+          <Button Content="3"
+                  Command="{Binding SelectShipCommand}"
+                  CommandParameter="3"
+                  Width="44"
+                  Height="36"/>
+          <Button Content="2"
+                  Command="{Binding SelectShipCommand}"
+                  CommandParameter="2"
+                  Width="44"
+                  Height="36"/>
+          <Button Content="1"
+                  Command="{Binding SelectShipCommand}"
+                  CommandParameter="1"
+                  Width="44"
+                  Height="36"/>
         </StackPanel>
-        <Button Content="Повернуть" Command="{Binding RotateShipCommand}" 
-                HorizontalContentAlignment="Center" />
-        <Button Content="Удалить корабль" Command="{Binding RemoveShipCommand}" 
-                HorizontalContentAlignment="Center" />
 
-        <Button Content="Начать игру" Command="{Binding StartGameCommand}" 
-                IsEnabled="{Binding ShipManager.AllShipsPlaced}" 
-                Margin="0,12,0,0" FontSize="16" Padding="16,8" 
-                HorizontalContentAlignment="Center" />
-      </StackPanel>
+        <StackPanel Orientation="Horizontal"
+                    Spacing="8"
+                    HorizontalAlignment="Center"
+                    Margin="0,12,0,0">
+          <Button Content="Удалить"
+                  Command="{Binding RemoveShipCommand}"
+                  MinWidth="120"
+                  Height="36"/>
+          <Button Content="Повернуть"
+                  Command="{Binding RotateShipCommand}"
+                  MinWidth="120"
+                  Height="36"/>
+        </StackPanel>
 
-      <!-- Правая панель с полем - только свое поле для размещения -->
-      <StackPanel Grid.Column="1" Grid.Row="1" Spacing="8" HorizontalAlignment="Center">
-        <TextBlock Text="Ваше поле" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" />
-        <TextBlock Text="Кликните на поле чтобы разместить корабль" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
-        <Grid Name="PlacementBoardGrid" HorizontalAlignment="Center" VerticalAlignment="Center">
-          <!-- Grid будет создан в code-behind -->
-        </Grid>
+        <Button Content="Начать игру"
+                Command="{Binding StartGameCommand}"
+                IsEnabled="{Binding ShipManager.AllShipsPlaced}"
+                MinWidth="160"
+                Height="44"
+                FontSize="16"
+                Background="#2563EB"
+                Foreground="White"
+                HorizontalAlignment="Center"
+                Margin="0,12,0,0"/>
       </StackPanel>
+    </Border>
+
+    <!-- ПРАВАЯ ЧАСТЬ — ПОЛЕ (КАК В ЭКРАНЕ ИГРЫ) -->
+    <Grid Grid.Column="2"
+          Grid.Row="1"
+          RowDefinitions="Auto,Auto,Auto"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Top">
+
+      <TextBlock Grid.Row="0"
+                 Text="Мое поле"
+                 FontWeight="Bold"
+                 FontSize="16"
+                 HorizontalAlignment="Center"
+                 Margin="0,0,0,8"/>
+
+      <TextBlock Grid.Row="1"
+                 FontSize="12"
+                 Opacity="0.8"
+                 Text="Левый клик — поставить палубу. Правый клик — удалить корабль."
+                 HorizontalAlignment="Center"
+                 TextAlignment="Center"
+                 Margin="0,0,0,8"/>
+
+      <!-- КЛЮЧЕВОЙ КОНТЕЙНЕР -->
+      <Border Grid.Row="2"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Top"
+              Background="Transparent">
+
+        <!-- ЭТОТ GRID БОЛЬШЕ НИЧТО НЕ ДАВИТ -->
+        <Grid Name="PlacementBoardGrid"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"/>
+      </Border>
+
     </Grid>
-  </StackPanel>
+
+  </Grid>
 </UserControl>

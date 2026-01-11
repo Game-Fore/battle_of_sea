@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Экран лобби -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BattleOfSea.Views.LobbyView">
@@ -39,6 +40,10 @@
       <Button Content="Обновить список" Command="{Binding RefreshCommand}" 
               Width="200" FontSize="14" HorizontalAlignment="Stretch" 
               HorizontalContentAlignment="Center" />
+      <Separator Margin="0,12" />
+      <Button Content="💬 Открыть чат" Click="OpenChat_Click" 
+              Width="200" FontSize="14" HorizontalAlignment="Stretch" 
+              HorizontalContentAlignment="Center" Background="#1E90FF" Foreground="White" />
     </StackPanel>
   </Grid>
 </UserControl>

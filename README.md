@@ -1,3 +1,4 @@
+<!-- Документация проекта -->
 # battle_of_sea
 
 Quick run (development):

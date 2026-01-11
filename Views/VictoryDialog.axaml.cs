@@ -1,3 +1,4 @@
+// Логика победы
 using Avalonia.Controls;
 using Avalonia.Media;
 

@@ -1,3 +1,4 @@
+// Представление поля
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;

@@ -40,7 +40,7 @@ namespace BattleOfSea.Tests
         public void GameViewModel_StatusText_ChangesWithState()
         {
             // Arrange
-            var vm = new GameViewModel();
+            var vm = new GameViewModel(null, null, demoMode: false);
             
             // Act
             vm.State = GameState.YourTurn;
@@ -56,6 +56,19 @@ namespace BattleOfSea.Tests
             Assert.Contains("ход", yourTurnText, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("побед", winText, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("проигр", loseText, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void State_Setter_AllowsTerminalToTerminalTransitions()
+        {
+            // Ensure setting terminal states explicitly works as expected even when switching between them
+            var vm = new GameViewModel(null, null, demoMode: false);
+            vm.State = GameState.YouWin;
+            vm.State = GameState.YouLose;
+            Assert.Equal(GameState.YouLose, vm.State);
+
+            vm.State = GameState.YouWin;
+            Assert.Equal(GameState.YouWin, vm.State);
         }
 
         [Fact]

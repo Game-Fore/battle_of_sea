@@ -1,3 +1,4 @@
+// Логика лобби
 using Avalonia.Controls;
 using System;
 
@@ -62,6 +63,13 @@ namespace BattleOfSea.Views
                     Console.WriteLine($"CreateRoom: Lobby DataContext not found");
                 }
             }
+        }
+
+        private void OpenChat_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            // Placeholder для открытия чата
+            // Когда второй разработчик закончит чат, можно будет вызвать его здесь
+            Console.WriteLine("Открытие чата из лобби...");
         }
     }
 }

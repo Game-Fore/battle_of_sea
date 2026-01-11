@@ -105,7 +105,10 @@ namespace BattleOfSea.ViewModels
         {
             if (message.Success)
             {
-                JoinRequested?.Invoke(Rooms.FirstOrDefault(r => r.Name == message.RoomId));
+                // Try to find the room in the rooms list, but if not found, create a minimal room object
+                var room = Rooms.FirstOrDefault(r => r.Name == message.RoomId) 
+                    ?? new Models.Room(message.RoomId, 1, 2);
+                JoinRequested?.Invoke(room);
             }
         }
 
@@ -135,6 +138,9 @@ namespace BattleOfSea.ViewModels
                 if (ok)
                 {
                     Console.WriteLine($"Joined room (mock): {room.Name}");
+                    // Small delay to ensure event fires after async completion
+                    await System.Threading.Tasks.Task.Delay(10);
+                    // Always invoke with the room that was passed in, not from the result message
                     JoinRequested?.Invoke(room);
                 }
                 else

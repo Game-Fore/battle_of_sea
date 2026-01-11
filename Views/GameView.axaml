@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Игровой экран -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BattleOfSea.Controls"
@@ -13,6 +14,8 @@
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Spacing="12">
         <Button Content="Выйти в лобби" Click="ExitToLobby_Click" 
                 HorizontalContentAlignment="Center" />
+        <Button Content="💬 Чат" Click="OpenChat_Click" 
+                HorizontalContentAlignment="Center" Background="#1E90FF" Foreground="White" />
         <Border Padding="12,6" CornerRadius="8" Background="{Binding StatusBackground}">
           <TextBlock Text="{Binding StatusText}" FontSize="18" FontWeight="Bold" 
                      Foreground="{Binding StatusForeground}" />

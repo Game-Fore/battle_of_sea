@@ -1,3 +1,4 @@
+// Состояние игры
 namespace BattleOfSea.Models
 {
     public enum GameState

@@ -1,3 +1,4 @@
+// Мок сети
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +29,6 @@ namespace BattleOfSea.Services
 
         public MockNetworkService()
         {
-            Console.WriteLine("MockNetworkService created");
             InitializeMockRooms();
         }
 
@@ -45,7 +45,6 @@ namespace BattleOfSea.Services
 
         public async Task<bool> ConnectAsync(string userId, string displayName)
         {
-            Console.WriteLine($"Mock connect: {userId} ({displayName})");
             await Task.Delay(200);
             _isConnected = true;
             _currentUserId = userId;
@@ -60,7 +59,6 @@ namespace BattleOfSea.Services
 
         public async Task DisconnectAsync()
         {
-            Console.WriteLine("Mock disconnect");
             await Task.Delay(100);
             _isConnected = false;
             _currentUserId = null;
@@ -69,7 +67,6 @@ namespace BattleOfSea.Services
 
         public async Task<List<Room>> GetRoomsAsync()
         {
-            Console.WriteLine("Mock get rooms");
             await Task.Delay(150);
             
             // Симулируем обновление списка комнат
@@ -85,7 +82,6 @@ namespace BattleOfSea.Services
 
         public async Task<bool> JoinRoomAsync(Room room, string? password = null)
         {
-            Console.WriteLine($"Mock join room: {room.Name}");
             await Task.Delay(300);
             
             _currentRoomId = room.Name;
@@ -111,7 +107,6 @@ namespace BattleOfSea.Services
 
         public async Task<bool> CreateRoomAsync(Room room, string? password = null)
         {
-            Console.WriteLine($"Mock create room: {room.Name}");
             await Task.Delay(300);
             
             _mockRooms.Add(room);
@@ -131,14 +126,12 @@ namespace BattleOfSea.Services
 
         public async Task LeaveRoomAsync()
         {
-            Console.WriteLine("Mock leave room");
             await Task.Delay(100);
             _currentRoomId = null;
         }
 
         public async Task<bool> SendShootAsync(int row, int col, string roomId)
         {
-            Console.WriteLine($"Mock send shoot: ({row}, {col}) in room {roomId}");
             await Task.Delay(200);
             
             // Симулируем ответ сервера (случайный результат для демо)
@@ -179,7 +172,6 @@ namespace BattleOfSea.Services
 
         public async Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId)
         {
-            Console.WriteLine($"Mock send ship placement: {ships.Count} ships in room {roomId}");
             await Task.Delay(200);
             
             // Симулируем готовность к игре

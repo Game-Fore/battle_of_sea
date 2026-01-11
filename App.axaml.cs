@@ -1,3 +1,4 @@
+// Точка входа приложения
 using Avalonia;
 using Avalonia.Markup.Xaml;
 using System;

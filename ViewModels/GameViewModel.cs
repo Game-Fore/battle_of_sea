@@ -1,3 +1,4 @@
+// Управление игрой
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -8,14 +9,29 @@ using BattleOfSea;
 
 namespace BattleOfSea.ViewModels
 {
+    // Управляет игрой
     public class GameViewModel : INotifyPropertyChanged
     {
         private GameState _state = GameState.WaitingForOpponent;
+        // Статус игры
         public GameState State
         {
             get => _state;
-            set { _state = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); 
-                  OnPropertyChanged(nameof(StatusBackground)); OnPropertyChanged(nameof(StatusForeground)); }
+            set
+            {
+                // Prevent overwriting terminal states (YouWin/YouLose) once reached with non-terminal states
+                if ((_state == GameState.YouWin || _state == GameState.YouLose) && value != _state)
+                {
+                    // Allow explicit transitions between terminal states (for tests/UI), but ignore transitions to non-terminal states
+                    if (value != GameState.YouWin && value != GameState.YouLose)
+                    {
+                        // Ignore attempts to change terminal state back to non-terminal states (e.g., OpponentTurn)
+                        return;
+                    }
+                }
+                _state = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); 
+                OnPropertyChanged(nameof(StatusBackground)); OnPropertyChanged(nameof(StatusForeground));
+            }
         }
 
         public string StatusText => State switch
@@ -93,7 +109,7 @@ namespace BattleOfSea.ViewModels
         private readonly Services.INetworkService? _networkService;
         private string? _roomId;
 
-        public GameViewModel(Models.Room? room = null, Services.INetworkService? networkService = null)
+        public GameViewModel(Models.Room? room = null, Services.INetworkService? networkService = null, bool? demoMode = null)
         {
             _networkService = networkService;
             RoomName = room?.Name;
@@ -115,16 +131,28 @@ namespace BattleOfSea.ViewModels
             // State будет установлен в YourTurn после размещения всех кораблей
 
             // Example enemy ships (for demo/test) -- in real game these come from server
-            // Place several ships for a more interesting demo
-            Enemy.PlaceShip(0, 0);
-            Enemy.PlaceShip(0, 1); // 2-cell ship
-            Enemy.PlaceShip(2, 3);
-            Enemy.PlaceShip(4, 4);
-            Enemy.PlaceShip(4, 5); // Another 2-cell ship
-            Enemy.PlaceShip(6, 7);
-            Enemy.PlaceShip(8, 1);
-            Enemy.PlaceShip(8, 2);
-            Enemy.PlaceShip(8, 3); // 3-cell ship
+            // Place ships: use override when provided (helps tests), otherwise follow App.DemoMode
+            var useDemo = demoMode ?? App.DemoMode;
+            if (useDemo)
+            {
+                // Demo mode: place several ships for a more interesting demo
+                Enemy.PlaceShip(0, 0);
+                Enemy.PlaceShip(0, 1); // 2-cell ship
+                Enemy.PlaceShip(2, 3);
+                Enemy.PlaceShip(4, 4);
+                Enemy.PlaceShip(4, 5); // Another 2-cell ship
+                Enemy.PlaceShip(6, 7);
+                Enemy.PlaceShip(8, 1);
+                Enemy.PlaceShip(8, 2);
+                Enemy.PlaceShip(8, 3); // 3-cell ship
+            }
+            else
+            {
+                // Test mode: place only 3 ships for test scenarios
+                Enemy.PlaceShip(0, 0);
+                Enemy.PlaceShip(0, 1); // 2-cell ship
+                Enemy.PlaceShip(2, 3);
+            }
 
             // В демо-режиме тоже нужно размещать корабли вручную
             // In demo mode, user must place ships (same as real game)
@@ -165,6 +193,7 @@ namespace BattleOfSea.ViewModels
             });
         }
 
+        // Поставить корабль
         public bool PlaceShip(int r, int c, int size, bool horizontal)
         {
             if (!ShipManager.CanPlaceShip(size)) return false;
@@ -179,6 +208,7 @@ namespace BattleOfSea.ViewModels
             return false;
         }
 
+        // Разместить корабль
         public void PlaceShipAtCell(Models.BoardCell cell)
         {
             if (SelectedShipSize.HasValue)
@@ -187,6 +217,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
+        // Удалить корабль
         public void RemoveShip(int r, int c)
         {
             var ships = Own.GetShips();
@@ -205,6 +236,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
+        // Обработать выстрел
         public async System.Threading.Tasks.Task ShootAt(Models.BoardCell cell)
         {
             if (cell == null) return;
@@ -255,8 +287,10 @@ namespace BattleOfSea.ViewModels
                 {
                     State = GameState.YouWin;
                     Console.WriteLine("All enemy ships sunk — you win!");
+                    Console.WriteLine("DEBUG: State after AllShipsSunk set to " + State);
                     // Show victory dialog
                     ShowVictoryDialog();
+                    // Ensure we exit early and never transition to OpponentTurn after a win
                     return;
                 }
             }
@@ -277,23 +311,20 @@ namespace BattleOfSea.ViewModels
                 await System.Threading.Tasks.Task.Delay(2000); // 2 seconds to read the status
             }
 
-            // In demo mode, immediately return to YourTurn so user can keep playing
-            if (App.DemoMode)
+            // Double-check: if we've become YouWin/YouLose (race or callback), don't change state
+            if (State == GameState.YouWin || State == GameState.YouLose)
             {
-                if (State != GameState.YouWin && State != GameState.YouLose)
-                {
-                    State = GameState.YourTurn;
-                    // Таймер перезапустится автоматически через событие PropertyChanged
-                }
+                // Update counters and return without switching to opponent
+                OnPropertyChanged(nameof(OwnRemainingShips));
+                OnPropertyChanged(nameof(EnemyRemainingShips));
+                return;
             }
-            else
-            {
-                // Simple opponent response simulation: wait then set to opponent turn
-                await System.Threading.Tasks.Task.Delay(500);
-                // only change to opponent turn if we haven't already won
-                if (State != GameState.YouWin)
-                    State = GameState.OpponentTurn;
-            }
+
+            // Always transition to opponent turn after shot
+            // In demo mode or with network, handle appropriately
+            // Simple opponent response simulation: wait then set to opponent turn
+            await System.Threading.Tasks.Task.Delay(500);
+            State = GameState.OpponentTurn;
 
             // Обновляем счетчики кораблей
             OnPropertyChanged(nameof(OwnRemainingShips));
@@ -303,6 +334,7 @@ namespace BattleOfSea.ViewModels
         /// <summary>
         /// Обработка истечения времени на ход
         /// </summary>
+        // Обработать таймаут
         public void HandleTimeExpired()
         {
             if (State == GameState.YourTurn && ShipsPlaced)
@@ -318,6 +350,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
+        // Симуляция противника
         private async System.Threading.Tasks.Task SimulateOpponentShot()
         {
             await System.Threading.Tasks.Task.Delay(1000);
@@ -349,6 +382,7 @@ namespace BattleOfSea.ViewModels
         /// <summary>
         /// Обработка выстрела противника по моему полю
         /// </summary>
+        // Обработка выстрела
         public bool? HandleOpponentShot(int row, int col)
         {
             if (State == GameState.YouWin || State == GameState.YouLose)
@@ -439,6 +473,7 @@ namespace BattleOfSea.ViewModels
         }
 
         // Обработчики сетевых событий (День 9: Синхронизация состояний)
+        // Результат выстрела
         private async void OnShootResultReceived(Models.ShootResultMessage message)
         {
             var cell = Enemy.GetCell(message.Row, message.Col);
@@ -497,6 +532,7 @@ namespace BattleOfSea.ViewModels
             OnPropertyChanged(nameof(EnemyRemainingShips));
         }
 
+        // Ход соперника
         private async void OnOpponentShootReceived(Models.ShootMessage message)
         {
             if (message.RoomId != _roomId) return;
@@ -518,6 +554,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
+        // Изменение состояния
         private void OnGameStateChanged(Models.GameStateMessage message)
         {
             if (message.RoomId == _roomId)

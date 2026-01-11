@@ -1,3 +1,4 @@
+// Игровое поле
 using System.Linq;
 using System.Collections.ObjectModel;
 

@@ -1,3 +1,4 @@
+// Комната данных
 namespace BattleOfSea.Models
 {
     public class Room

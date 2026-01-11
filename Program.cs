@@ -1,3 +1,4 @@
+// Старт приложения
 using Avalonia;
 using Avalonia.ReactiveUI;
 
