@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Новый профиль",
+    "Projects": [
+      {
+        "Path": "SeaBattleChat\\SeaBattleChat.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "SeaBattleChatServer\\SeaBattleChatServer.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

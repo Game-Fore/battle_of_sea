@@ -1,0 +1,10 @@
+﻿################################################################################
+# Данный GITIGNORE-файл был автоматически создан Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/SeaBattleChat/.vs
+/SeaBattleChat/SeaBattleChat/bin/Debug/net8.0
+/SeaBattleChat/SeaBattleChat/obj
+/SeaBattleChat/SeaBattleChatServer/bin/Debug/net8.0
+/SeaBattleChat/SeaBattleChatServer/obj
