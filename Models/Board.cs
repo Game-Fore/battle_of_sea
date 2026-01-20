@@ -4,11 +4,15 @@ using System.Collections.ObjectModel;
 
 namespace BattleOfSea.Models
 {
+    // Класс игрового поля
     public class Board
     {
+        // Коллекция ячеек поля
         public ObservableCollection<BoardCell> Cells { get; } = new ObservableCollection<BoardCell>();
+        // Размер поля
         public int Size { get; }
 
+        // Создание поля заданного размера
         public Board(int size = 10)
         {
             Size = size;
@@ -17,21 +21,20 @@ namespace BattleOfSea.Models
                     Cells.Add(new BoardCell(r, c));
         }
 
+        // Получить ячейку по координатам
         public BoardCell? GetCell(int r, int c) => Cells.FirstOrDefault(x => x.Row == r && x.Col == c);
 
+        // Разместить корабль в ячейке
         public void PlaceShip(int r, int c)
         {
             var cell = GetCell(r, c);
             if (cell != null) cell.HasShip = true;
         }
 
-        /// <summary>
-        /// Place a ship of given size starting at (r, c) in given direction (true = horizontal, false = vertical)
-        /// Returns true if placement was successful
-        /// </summary>
+        /// Разместить корабль заданного размера
         public bool PlaceShip(int r, int c, int size, bool horizontal)
         {
-            // Check if ship fits on board
+            // Проверка возможности размещения
             if (horizontal)
             {
                 if (c + size > Size) return false;
@@ -39,10 +42,10 @@ namespace BattleOfSea.Models
                 {
                     var cell = GetCell(r, c + i);
                     if (cell == null || cell.HasShip) return false;
-                    // Check adjacent cells (no touching ships)
+                    // Проверка соседних клеток
                     if (HasAdjacentShip(r, c + i)) return false;
                 }
-                // Place the ship
+                // Размещение корабля
                 for (int i = 0; i < size; i++)
                 {
                     GetCell(r, c + i)!.HasShip = true;
@@ -55,10 +58,10 @@ namespace BattleOfSea.Models
                 {
                     var cell = GetCell(r + i, c);
                     if (cell == null || cell.HasShip) return false;
-                    // Check adjacent cells (no touching ships)
+                    // Проверка соседних клеток
                     if (HasAdjacentShip(r + i, c)) return false;
                 }
-                // Place the ship
+                // Размещение корабля
                 for (int i = 0; i < size; i++)
                 {
                     GetCell(r + i, c)!.HasShip = true;
@@ -67,9 +70,10 @@ namespace BattleOfSea.Models
             return true;
         }
 
+        // Проверить наличие соседнего корабля
         private bool HasAdjacentShip(int r, int c)
         {
-            // Check all 8 neighbors (including diagonals)
+            // Проверка всех 8 соседей
             var neighbors = new (int r, int c)[]
             {
                 (r - 1, c - 1), (r - 1, c), (r - 1, c + 1),
@@ -84,12 +88,13 @@ namespace BattleOfSea.Models
             return false;
         }
 
+        // Удалить корабль из ячейки
         public void RemoveShip(int r, int c)
         {
             var cell = GetCell(r, c);
             if (cell != null && cell.HasShip)
             {
-                // Remove entire ship (connected cells)
+                // Удаление всего корабля
                 var ships = GetShips();
                 foreach (var ship in ships)
                 {
@@ -105,9 +110,7 @@ namespace BattleOfSea.Models
             }
         }
 
-        /// <summary>
-        /// Find contiguous groups of ship cells (4-way adjacency) representing individual ships.
-        /// </summary>
+        /// Найти все корабли на поле
         public System.Collections.Generic.List<System.Collections.Generic.List<BoardCell>> GetShips()
         {
             var ships = new System.Collections.Generic.List<System.Collections.Generic.List<BoardCell>>();
@@ -124,7 +127,7 @@ namespace BattleOfSea.Models
                     var cur = stack.Pop();
                     ship.Add(cur);
 
-                    // neighbors: up/down/left/right
+                    // Поиск соседних клеток корабля
                     var neighbors = new (int r, int c)[] { (cur.Row - 1, cur.Col), (cur.Row + 1, cur.Col), (cur.Row, cur.Col - 1), (cur.Row, cur.Col + 1) };
                     foreach (var (r, c) in neighbors)
                     {
@@ -143,10 +146,7 @@ namespace BattleOfSea.Models
             return ships;
         }
 
-        /// <summary>
-        /// Returns true if the ship that contains the given cell coordinates is fully hit/sunk.
-        /// Returns false if not sunk, or null if the cell is not a ship cell.
-        /// </summary>
+        /// Проверить потоплен ли корабль
         public bool? IsShipSunkAt(int r, int c)
         {
             var cell = GetCell(r, c);
@@ -164,16 +164,16 @@ namespace BattleOfSea.Models
             return null;
         }
 
+        // Подсчет оставшихся кораблей
         public int RemainingShipsCount()
         {
             return GetShips().Count(s => !s.All(c => c.IsHit));
         }
 
+        // Проверка потопления всех кораблей
         public bool AllShipsSunk() => RemainingShipsCount() == 0;
 
-        /// <summary>
-        /// Shoot at a given cell. Returns true if hit, false if miss, null if already revealed or invalid.
-        /// </summary>
+        /// Выстрел по ячейке
         public bool? ShootAt(int r, int c)
         {
             var cell = GetCell(r, c);

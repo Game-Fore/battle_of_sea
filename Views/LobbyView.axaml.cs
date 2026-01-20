@@ -6,6 +6,7 @@ namespace BattleOfSea.Views
 {
     public partial class LobbyView : UserControl
     {
+        // Конструктор представления лобби (публичный)
         public LobbyView()
         {
             InitializeComponent();
@@ -14,6 +15,7 @@ namespace BattleOfSea.Views
             var lb = this.FindControl<ListBox>("RoomsList");
             if (lb != null)
             {
+                // Обработчик двойного клика по комнате
                 lb.DoubleTapped += (s, e) =>
                 {
                     if (lb.SelectedItem is Models.Room room)
@@ -24,6 +26,7 @@ namespace BattleOfSea.Views
                     }
                 };
 
+                // Обработчик изменения выбора комнаты
                 lb.SelectionChanged += (s, e) =>
                 {
                     if (lb.SelectedItem is Models.Room room)
@@ -34,6 +37,7 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Обработчик клика "Создать комнату" (приватный метод)
         private async void CreateRoom_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             var win = new CreateRoomWindow();
@@ -43,7 +47,7 @@ namespace BattleOfSea.Views
             var parent = this.VisualRoot as Avalonia.Controls.Window;
             if (parent == null)
             {
-                // If we can't find an owner window (rare), show modeless window as fallback
+                // Если не нашли родительское окно (редко), показываем немодальное окно как запасной вариант
                 win.Show();
                 return;
             }
@@ -55,7 +59,7 @@ namespace BattleOfSea.Views
                 {
                     // Комната уже создана в CreateRoomWindow, просто добавляем и присоединяемся
                     lvm.AddRoom(result);
-                    // auto-join созданной комнаты - это вызовет JoinRequested и откроет игру
+                    // Автоматическое присоединение к созданной комнате - вызовет JoinRequested и откроет игру
                     lvm.JoinCommand.Execute(result);
                 }
                 else
@@ -63,13 +67,6 @@ namespace BattleOfSea.Views
                     Console.WriteLine($"CreateRoom: Lobby DataContext not found");
                 }
             }
-        }
-
-        private void OpenChat_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-        {
-            // Placeholder для открытия чата
-            // Когда второй разработчик закончит чат, можно будет вызвать его здесь
-            Console.WriteLine("Открытие чата из лобби...");
         }
     }
 }

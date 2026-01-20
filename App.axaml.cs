@@ -7,25 +7,28 @@ namespace BattleOfSea
 {
     public partial class App : Application
     {
-        // Demo mode: when true, the app will seed mock content and auto-open a sample game for preview
-        // Can be controlled via environment variable BATTLEOFSEA_DEMO (set to "0" or "false" to disable)
+        // Режим демонстрации: когда true, приложение будет заполнять мок-контентом и автоматически открывать пример игры для предварительного просмотра
+        // Можно контролировать через переменную окружения BATTLEOFSEA_DEMO (установите "0" или "false" для отключения)
         public static bool DemoMode { get; } = InitDemoMode();
 
+        // Инициализация режима демонстрации (приватный статический метод)
         private static bool InitDemoMode()
         {
             var v = Environment.GetEnvironmentVariable("BATTLEOFSEA_DEMO");
-            if (string.IsNullOrEmpty(v)) return true; // default to demo ON for local dev
+            if (string.IsNullOrEmpty(v)) return true; // по умолчанию демо ВКЛ для локальной разработки
             return !(v == "0" || v.Equals("false", StringComparison.OrdinalIgnoreCase));
         }
 
+        // Инициализация приложения (публичный метод переопределения)
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
         }
 
+        // Завершение инициализации фреймворка (публичный метод переопределения)
         public override void OnFrameworkInitializationCompleted()
         {
-            // Ensure a main window is created for desktop lifetimes so that the UI is visible
+            // Гарантируем создание главного окна для desktop-приложений, чтобы UI был видим
             if (ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
             {
                 if (desktop.MainWindow == null)
@@ -33,7 +36,7 @@ namespace BattleOfSea
                     desktop.MainWindow = new MainWindow();
                 }
 
-                // Ensure window is shown and activated (helps on macOS when windows remain hidden)
+                // Гарантируем показ и активацию окна (помогает на macOS, где окна могут оставаться скрытыми)
                 try
                 {
                     desktop.MainWindow.Show();
@@ -43,28 +46,6 @@ namespace BattleOfSea
                 {
                     System.Console.WriteLine($"MainWindow show/activate error: {ex.Message}");
                 }
-
-                // In demo mode, don't show dialog immediately - let user see the main window first
-                // User can close demo dialog if it appears, or it will close automatically
-                // Commented out for now so main window is immediately visible
-                /*
-                if (DemoMode && desktop.MainWindow != null)
-                {
-                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        try
-                        {
-                            var dlg = new Views.DemoDialog();
-                            // Show as non-modal window so main window is visible
-                            dlg.Show(desktop.MainWindow);
-                        }
-                        catch (System.Exception ex)
-                        {
-                            System.Console.WriteLine($"Demo dialog error: {ex.Message}");
-                        }
-                    });
-                }
-                */
             }
 
             base.OnFrameworkInitializationCompleted();

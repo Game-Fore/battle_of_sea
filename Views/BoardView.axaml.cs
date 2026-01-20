@@ -15,12 +15,14 @@ namespace BattleOfSea.Views
         private System.Collections.Generic.Dictionary<Models.BoardCell, Control> _ownCellControls = new();
         private System.Collections.Generic.Dictionary<Models.BoardCell, Control> _enemyCellControls = new();
 
+        // Конструктор представления поля (публичный)
         public BoardView()
         {
             InitializeComponent();
-            // Do not set DataContext here; expect parent (GameView) to provide GameViewModel
+            // Не устанавливаем DataContext здесь; ожидаем, что родитель (GameView) предоставит GameViewModel
         }
 
+        // Обработчик изменения контекста данных (защищенный метод переопределения)
         protected override void OnDataContextChanged(EventArgs e)
         {
             base.OnDataContextChanged(e);
@@ -30,15 +32,17 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Обработчик завершения инициализации (защищенный метод переопределения)
         protected override void OnInitialized()
         {
             base.OnInitialized();
             BuildBoards();
         }
 
+        // Построение игровых полей (приватный метод)
         private void BuildBoards()
         {
-            // Clear previous subscriptions
+            // Очищаем предыдущие подписки
             foreach (var cell in _ownCellControls.Keys)
             {
                 cell.PropertyChanged -= OnOwnCellPropertyChanged;
@@ -62,6 +66,7 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Обработчик изменения свойства ячейки своего поля (приватный метод)
         private void OnOwnCellPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (sender is Models.BoardCell cell && _ownCellControls.TryGetValue(cell, out var control))
@@ -70,6 +75,7 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Обработчик изменения свойства ячейки поля противника (приватный метод)
         private void OnEnemyCellPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (sender is Models.BoardCell cell && _enemyCellControls.TryGetValue(cell, out var control))
@@ -78,6 +84,7 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Обновление элемента управления ячейки своего поля (приватный метод)
         private void UpdateOwnCellControl(Control control, Models.BoardCell cell)
         {
             if (control is Border border && border.Child is TextBlock textBlock)
@@ -89,6 +96,7 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Обновление элемента управления ячейки поля противника (приватный метод)
         private void UpdateEnemyCellControl(Control control, Models.BoardCell cell)
         {
             if (control is Border border)
@@ -104,6 +112,7 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Построение игрового поля (приватный метод)
         private void BuildBoard(Grid grid, Models.Board board, bool isOwnBoard)
         {
             grid.Children.Clear();
@@ -121,31 +130,31 @@ namespace BattleOfSea.Views
                 grid.MinHeight = totalSize;
                 grid.MaxHeight = totalSize;
 
-            // Create column definitions: header + size columns (all same size)
+            // Создаем определения столбцов: заголовок + size столбцов (все одинакового размера)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new Avalonia.Controls.GridLength(HeaderSize, Avalonia.Controls.GridUnitType.Pixel), MinWidth = HeaderSize, MaxWidth = HeaderSize });
             for (int i = 0; i < size; i++)
             {
-                // Ensure all columns have exactly the same width
+                // Гарантируем, что все столбцы имеют одинаковую ширину
                 grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new Avalonia.Controls.GridLength(CellSize, Avalonia.Controls.GridUnitType.Pixel), MinWidth = CellSize, MaxWidth = CellSize });
             }
 
-            // Create row definitions: header + size rows (all same size)
+            // Создаем определения строк: заголовок + size строк (все одинаковой высоты)
             grid.RowDefinitions.Add(new RowDefinition { Height = new Avalonia.Controls.GridLength(HeaderSize, Avalonia.Controls.GridUnitType.Pixel), MinHeight = HeaderSize, MaxHeight = HeaderSize });
             for (int i = 0; i < size; i++)
             {
-                // Ensure all rows have exactly the same height
+                // Гарантируем, что все строки имеют одинаковую высоту
                 grid.RowDefinitions.Add(new RowDefinition { Height = new Avalonia.Controls.GridLength(CellSize, Avalonia.Controls.GridUnitType.Pixel), MinHeight = CellSize, MaxHeight = CellSize });
             }
 
-            // Add column headers (A-J)
+            // Добавляем заголовки столбцов (A-J)
             for (int col = 0; col < size; col++)
             {
                 var headerBorder = new Border
                 {
-                    Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)), // Transparent
+                    Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)), // Прозрачный
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
-                    ZIndex = 10 // Ensure headers are above cells
+                    ZIndex = 10 // Гарантируем, что заголовки поверх ячеек
                 };
                 var header = new TextBlock
                 {
@@ -154,7 +163,7 @@ namespace BattleOfSea.Views
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                     FontWeight = FontWeight.Bold,
                     FontSize = 12,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0)) // Black
+                    Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0)) // Черный
                 };
                 headerBorder.Child = header;
                 Grid.SetColumn(headerBorder, col + 1);
@@ -162,15 +171,15 @@ namespace BattleOfSea.Views
                 grid.Children.Add(headerBorder);
             }
 
-            // Add row headers (1-10)
+            // Добавляем заголовки строк (1-10)
             for (int row = 0; row < size; row++)
             {
                 var headerBorder = new Border
                 {
-                    Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)), // Transparent
+                    Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)), // Прозрачный
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
-                    ZIndex = 10 // Ensure headers are above cells
+                    ZIndex = 10 // Гарантируем, что заголовки поверх ячеек
                 };
                 var header = new TextBlock
                 {
@@ -179,7 +188,7 @@ namespace BattleOfSea.Views
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                     FontWeight = FontWeight.Bold,
                     FontSize = 12,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0)) // Black
+                    Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0)) // Черный
                 };
                 headerBorder.Child = header;
                 Grid.SetColumn(headerBorder, 0);
@@ -187,7 +196,7 @@ namespace BattleOfSea.Views
                 grid.Children.Add(headerBorder);
             }
 
-            // Add cells
+            // Добавляем ячейки
             foreach (var cell in board.Cells)
             {
                 Control cellControl;
@@ -215,7 +224,7 @@ namespace BattleOfSea.Views
                             if (gvm.SelectedShipSize.HasValue)
                             {
                                 gvm.PlaceShipAtCell(cell);
-                                BuildBoard(grid, board, isOwnBoard); // Rebuild to update
+                                BuildBoard(grid, board, isOwnBoard); // Перестраиваем для обновления
                             }
                         };
                         
@@ -302,6 +311,7 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Получение фона ячейки своего поля (приватный метод)
         private IBrush GetOwnCellBackground(Models.BoardCell cell)
         {
             // Мое поле - светло-голубой фон, корабли видны
@@ -311,6 +321,7 @@ namespace BattleOfSea.Views
             return new SolidColorBrush(Color.FromRgb(219, 234, 254)); // Очень светло-голубой для пустых
         }
 
+        // Получение отображения ячейки своего поля (приватный метод)
         private string GetOwnCellDisplay(Models.BoardCell cell)
         {
             // На моем поле показываем корабли и результаты выстрелов противника
@@ -321,6 +332,7 @@ namespace BattleOfSea.Views
             return string.Empty;
         }
 
+        // Получение фона ячейки поля противника (приватный метод)
         private IBrush GetEnemyCellBackground(Models.BoardCell cell)
         {
             // Поле противника - такой же фон как мое поле, но корабли не видны
@@ -332,11 +344,12 @@ namespace BattleOfSea.Views
             return new SolidColorBrush(Color.FromRgb(219, 234, 254)); // Очень светло-голубой для всех неоткрытых
         }
 
+        // Обработчик клика по ячейке поля противника (приватный метод)
         private async void EnemyCell_Click(object? sender, Models.BoardCell cell)
         {
             if (cell != null && !cell.IsRevealed)
             {
-                // If the view is hosted inside GameView, call its Shoot handler
+                // Если представление находится внутри GameView, вызываем его обработчик выстрела
                 if (DataContext is ViewModels.GameViewModel gvm)
                 {
                     await gvm.ShootAt(cell);

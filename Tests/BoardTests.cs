@@ -3,9 +3,11 @@ using BattleOfSea.Models;
 
 namespace BattleOfSea.Tests
 {
+    // Тесты для игрового поля
     public class BoardTests
     {
         [Fact]
+        // Тест промаха при выстреле (публичный метод)
         public void ShootAt_Miss_SetsRevealedAndNotHit()
         {
             var b = new Board(5);
@@ -17,6 +19,7 @@ namespace BattleOfSea.Tests
         }
 
         [Fact]
+        // Тест попадания при выстреле (публичный метод)
         public void ShootAt_Hit_SetsRevealedAndHit()
         {
             var b = new Board(5);
@@ -29,6 +32,7 @@ namespace BattleOfSea.Tests
         }
 
         [Fact]
+        // Тест выстрела в уже открытую ячейку (публичный метод)
         public void ShootAt_AlreadyRevealed_ReturnsNull()
         {
             var b = new Board(5);

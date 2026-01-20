@@ -7,6 +7,7 @@ using BattleOfSea.Models;
 
 namespace BattleOfSea.ViewModels
 {
+    // Модель представления расстановки кораблей
     public class ShipPlacementViewModel : INotifyPropertyChanged
     {
         private Models.Board _board;
@@ -14,30 +15,35 @@ namespace BattleOfSea.ViewModels
         private int? _selectedShipSize;
         private bool _isHorizontal = true;
 
+        // Игровое поле (публичное свойство)
         public Models.Board Board
         {
             get => _board;
             set { _board = value; OnPropertyChanged(); }
         }
 
+        // Менеджер размещения кораблей (публичное свойство)
         public ShipPlacementManager ShipManager
         {
             get => _shipManager;
             set { _shipManager = value; OnPropertyChanged(); OnPropertyChanged(nameof(ShipStatusText)); }
         }
 
+        // Выбранный размер корабля (публичное свойство)
         public int? SelectedShipSize
         {
             get => _selectedShipSize;
             set { _selectedShipSize = value; OnPropertyChanged(); }
         }
 
+        // Горизонтальная ориентация корабля (публичное свойство)
         public bool IsHorizontal
         {
             get => _isHorizontal;
             set { _isHorizontal = value; OnPropertyChanged(); }
         }
 
+        // Текст статуса кораблей (публичное свойство)
         public string ShipStatusText
         {
             get
@@ -52,18 +58,22 @@ namespace BattleOfSea.ViewModels
             }
         }
 
+        // Можно ли начать игру (публичное свойство)
         public bool CanStartGame => _shipManager?.AllShipsPlaced ?? false;
 
+        // Команды управления расстановкой (публичные свойства)
         public ICommand PlaceShipCommand { get; }
         public ICommand RemoveShipCommand { get; }
         public ICommand RotateShipCommand { get; }
         public ICommand ClearBoardCommand { get; }
 
+        // Конструктор модели представления (публичный)
         public ShipPlacementViewModel(Models.Board board)
         {
             _board = board;
             _shipManager = new ShipPlacementManager();
             
+            // Инициализация команды размещения корабля
             PlaceShipCommand = new Utils.RelayCommand(o =>
             {
                 if (o is BoardCell cell && SelectedShipSize.HasValue)
@@ -72,6 +82,7 @@ namespace BattleOfSea.ViewModels
                 }
             });
 
+            // Инициализация команды удаления корабля
             RemoveShipCommand = new Utils.RelayCommand(o =>
             {
                 if (o is BoardCell cell && cell.HasShip)
@@ -80,17 +91,20 @@ namespace BattleOfSea.ViewModels
                 }
             });
 
+            // Инициализация команды поворота корабля
             RotateShipCommand = new Utils.RelayCommand(_ =>
             {
                 IsHorizontal = !IsHorizontal;
             });
 
+            // Инициализация команды очистки поля
             ClearBoardCommand = new Utils.RelayCommand(_ =>
             {
                 ClearBoard();
             });
         }
 
+        // Разместить корабль (приватный метод)
         private void PlaceShip(int r, int c, int size)
         {
             if (!_shipManager.CanPlaceShip(size)) return;
@@ -103,6 +117,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
+        // Удалить корабль (приватный метод)
         private void RemoveShip(int r, int c)
         {
             var ships = _board.GetShips();
@@ -120,6 +135,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
+        // Очистить поле (приватный метод)
         private void ClearBoard()
         {
             foreach (var cell in _board.Cells)
@@ -131,9 +147,10 @@ namespace BattleOfSea.ViewModels
             OnPropertyChanged(nameof(CanStartGame));
         }
 
+        // Событие изменения свойства (публичное событие)
         public event PropertyChangedEventHandler? PropertyChanged;
+        // Уведомление об изменении свойства (приватный метод)
         private void OnPropertyChanged([CallerMemberName] string? name = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }
-

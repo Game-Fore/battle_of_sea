@@ -5,26 +5,28 @@ using BattleOfSea.Models;
 
 namespace BattleOfSea.Services
 {
-    /// <summary>
-    /// Mock сервис авторизации (День 11)
-    /// </summary>
+    // Заглушка сервиса авторизации для тестирования
     public class MockAuthService : IAuthService
     {
         private User? _currentUser;
 
+        // Текущий пользователь (публичное свойство)
         public User? CurrentUser => _currentUser;
+        // Авторизован ли пользователь (публичное свойство)
         public bool IsAuthenticated => _currentUser != null;
 
+        // Вход пользователя (публичный метод)
         public async Task<bool> LoginAsync(string userId, string displayName)
         {
             Console.WriteLine($"Mock login: {userId} ({displayName})");
             await Task.Delay(200);
             
-            // Простая авторизация - просто создаем пользователя
+            // Создание пользователя для тестирования
             _currentUser = new User(userId, displayName);
             return true;
         }
 
+        // Выход пользователя (публичный метод)
         public async Task LogoutAsync()
         {
             Console.WriteLine("Mock logout");
@@ -32,6 +34,7 @@ namespace BattleOfSea.Services
             _currentUser = null;
         }
 
+        // Получение текущего пользователя (публичный метод)
         public async Task<User?> GetCurrentUserAsync()
         {
             await Task.Delay(50);
@@ -39,4 +42,3 @@ namespace BattleOfSea.Services
         }
     }
 }
-

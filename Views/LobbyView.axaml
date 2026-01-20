@@ -6,7 +6,6 @@
   <Grid ColumnDefinitions="3*,2*" RowDefinitions="Auto,*" Margin="10">
     <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
       <TextBlock Text="Лобби" FontSize="20" Margin="4" />
-      <TextBlock Text=" (демо)" Foreground="#065f46" Margin="6,8,4,4" FontSize="12" />
     </StackPanel>
 
     <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Rooms}" SelectedItem="{Binding SelectedRoom}" Name="RoomsList">
@@ -40,10 +39,6 @@
       <Button Content="Обновить список" Command="{Binding RefreshCommand}" 
               Width="200" FontSize="14" HorizontalAlignment="Stretch" 
               HorizontalContentAlignment="Center" />
-      <Separator Margin="0,12" />
-      <Button Content="💬 Открыть чат" Click="OpenChat_Click" 
-              Width="200" FontSize="14" HorizontalAlignment="Stretch" 
-              HorizontalContentAlignment="Center" Background="#1E90FF" Foreground="White" />
     </StackPanel>
   </Grid>
 </UserControl>

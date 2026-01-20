@@ -3,36 +3,39 @@ using BattleOfSea.Models;
 
 namespace BattleOfSea.Tests
 {
+    // Тесты для игрового поля и кораблей
     public class BoardShipTests
     {
         [Fact]
+        // Тест потопления корабля при поражении всех его ячеек (публичный метод)
         public void ShipIsSunk_WhenAllCellsHit()
         {
             var b = new Board(5);
-            // place a 2-cell ship at (0,0) and (0,1)
+            // размещаем 2-палубный корабль на позициях (0,0) и (0,1)
             b.PlaceShip(0, 0);
             b.PlaceShip(0, 1);
 
-            // initial: not sunk
+            // начальное состояние: корабль не потоплен
             Assert.False(b.IsShipSunkAt(0, 0) ?? false);
 
-            // hit first cell
+            // попадание в первую ячейку
             b.ShootAt(0, 0);
             Assert.False(b.IsShipSunkAt(0, 0) ?? false);
 
-            // hit second cell -> ship sunk
+            // попадание во вторую ячейку -> корабль потоплен
             b.ShootAt(0, 1);
             Assert.True(b.IsShipSunkAt(0, 0) ?? false);
-            Assert.True(b.AllShipsSunk() == false ? false : true); // All ships sunk should be true
+            Assert.True(b.AllShipsSunk() == false ? false : true); // Все корабли потоплены должно быть true
         }
 
         [Fact]
+        // Тест уменьшения количества оставшихся кораблей при потоплении (публичный метод)
         public void RemainingShipsCount_DecreasesOnSunk()
         {
             var b = new Board(5);
             b.PlaceShip(0, 0);
-            b.PlaceShip(0, 1); // one ship length 2
-            b.PlaceShip(2, 2); // second ship length 1
+            b.PlaceShip(0, 1); // один корабль длиной 2
+            b.PlaceShip(2, 2); // второй корабль длиной 1
 
             Assert.Equal(2, b.RemainingShipsCount());
 

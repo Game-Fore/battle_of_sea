@@ -5,44 +5,45 @@ using BattleOfSea.ViewModels;
 
 namespace BattleOfSea.Tests
 {
-    /// <summary>
-    /// Простые тесты UI компонентов (День 11: Тесты UI)
-    /// </summary>
+    // Простые тесты UI компонентов
     public class UITests
     {
         [Fact]
+        // Тест количества оставшихся кораблей игрока (публичный метод)
         public void GameViewModel_OwnRemainingShips_ReturnsCorrectCount()
         {
-            // Arrange
+            // Подготовка
             var vm = new GameViewModel();
             
-            // Act
+            // Действие
             var count = vm.OwnRemainingShips;
             
-            // Assert
+            // Проверка
             Assert.True(count >= 0);
         }
 
         [Fact]
+        // Тест количества оставшихся кораблей противника (публичный метод)
         public void GameViewModel_EnemyRemainingShips_ReturnsCorrectCount()
         {
-            // Arrange
+            // Подготовка
             var vm = new GameViewModel();
             
-            // Act
+            // Действие
             var count = vm.EnemyRemainingShips;
             
-            // Assert
+            // Проверка
             Assert.True(count >= 0);
         }
 
         [Fact]
+        // Тест изменения текста статуса с изменением состояния (публичный метод)
         public void GameViewModel_StatusText_ChangesWithState()
         {
-            // Arrange
+            // Подготовка
             var vm = new GameViewModel(null, null, demoMode: false);
             
-            // Act
+            // Действие
             vm.State = GameState.YourTurn;
             var yourTurnText = vm.StatusText;
             
@@ -52,16 +53,17 @@ namespace BattleOfSea.Tests
             vm.State = GameState.YouLose;
             var loseText = vm.StatusText;
             
-            // Assert
+            // Проверка
             Assert.Contains("ход", yourTurnText, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("побед", winText, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("проигр", loseText, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
+        // Тест установки конечных состояний игры (публичный метод)
         public void State_Setter_AllowsTerminalToTerminalTransitions()
         {
-            // Ensure setting terminal states explicitly works as expected even when switching between them
+            // Проверяем, что явная установка конечных состояний работает как ожидается
             var vm = new GameViewModel(null, null, demoMode: false);
             vm.State = GameState.YouWin;
             vm.State = GameState.YouLose;
@@ -72,40 +74,42 @@ namespace BattleOfSea.Tests
         }
 
         [Fact]
+        // Тест проверки потопления всех кораблей на пустом поле (публичный метод)
         public void Board_AllShipsSunk_ReturnsTrueWhenNoShips()
         {
-            // Arrange
+            // Подготовка
             var board = new Board(10);
             
-            // Act & Assert
+            // Действие и проверка
             Assert.True(board.AllShipsSunk());
         }
 
         [Fact]
+        // Тест проверки потопления всех кораблей при наличии кораблей (публичный метод)
         public void Board_AllShipsSunk_ReturnsFalseWhenShipsExist()
         {
-            // Arrange
+            // Подготовка
             var board = new Board(10);
             board.PlaceShip(0, 0);
             
-            // Act & Assert
+            // Действие и проверка
             Assert.False(board.AllShipsSunk());
         }
 
         [Fact]
+        // Тест подсчета оставшихся кораблей (публичный метод)
         public void Board_RemainingShipsCount_ReturnsCorrectCount()
         {
-            // Arrange
+            // Подготовка
             var board = new Board(10);
             board.PlaceShip(0, 0);
             board.PlaceShip(2, 2);
             
-            // Act
+            // Действие
             var count = board.RemainingShipsCount();
             
-            // Assert
+            // Проверка
             Assert.Equal(2, count);
         }
     }
 }
-

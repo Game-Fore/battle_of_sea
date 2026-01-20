@@ -7,6 +7,7 @@ using BattleOfSea.Models;
 
 namespace BattleOfSea.Services
 {
+    // Заглушка сетевого сервиса для тестирования
     public class MockNetworkService : INetworkService
     {
         private bool _isConnected = false;
@@ -15,34 +16,40 @@ namespace BattleOfSea.Services
         private readonly Random _random = new Random();
         private readonly List<Room> _mockRooms = new List<Room>();
 
+        // Флаг подключения к серверу (публичное свойство)
         public bool IsConnected => _isConnected;
 
+        // Событие получения результата выстрела (публичное событие)
         public event Action<ShootResultMessage>? ShootResultReceived;
+        // Событие получения выстрела противника (публичное событие)
         public event Action<ShootMessage>? OpponentShootReceived;
+        // Событие изменения состояния игры (публичное событие)
         public event Action<GameStateMessage>? GameStateChanged;
+        // Событие обновления списка комнат (публичное событие)
         public event Action<RoomsListMessage>? RoomsListUpdated;
+        // Событие результата присоединения к комнате (публичное событие)
         public event Action<JoinRoomMessage>? JoinRoomResult;
+        // Событие подключения пользователя (публичное событие)
         public event Action<UserConnectedMessage>? UserConnected;
         #pragma warning disable CS0067 // Event is never used - reserved for future use
+        // Событие ошибки соединения (публичное событие)
         public event Action<string>? ConnectionError;
         #pragma warning restore CS0067
 
+        // Конструктор сервиса (публичный)
         public MockNetworkService()
         {
             InitializeMockRooms();
         }
 
+        // Инициализация тестовых комнат (приватный метод)
         private void InitializeMockRooms()
         {
-            _mockRooms.AddRange(new[]
-            {
-                new Room("Alpha", 1, 2),
-                new Room("Bravo", 0, 2),
-                new Room("Charlie", 2, 4),
-                new Room("Delta", 1, 4),
-            });
+            // Демо-комнаты удалены
+            _mockRooms.Clear();
         }
 
+        // Подключение к серверу (публичный метод)
         public async Task<bool> ConnectAsync(string userId, string displayName)
         {
             await Task.Delay(200);
@@ -57,6 +64,7 @@ namespace BattleOfSea.Services
             return true;
         }
 
+        // Отключение от сервера (публичный метод)
         public async Task DisconnectAsync()
         {
             await Task.Delay(100);
@@ -65,6 +73,7 @@ namespace BattleOfSea.Services
             _currentRoomId = null;
         }
 
+        // Получение списка комнат (публичный метод)
         public async Task<List<Room>> GetRoomsAsync()
         {
             await Task.Delay(150);
@@ -80,6 +89,7 @@ namespace BattleOfSea.Services
             return message.Rooms;
         }
 
+        // Присоединение к комнате (публичный метод)
         public async Task<bool> JoinRoomAsync(Room room, string? password = null)
         {
             await Task.Delay(300);
@@ -105,6 +115,7 @@ namespace BattleOfSea.Services
             return true;
         }
 
+        // Создание комнаты (публичный метод)
         public async Task<bool> CreateRoomAsync(Room room, string? password = null)
         {
             await Task.Delay(300);
@@ -124,12 +135,14 @@ namespace BattleOfSea.Services
             return true;
         }
 
+        // Выход из комнаты (публичный метод)
         public async Task LeaveRoomAsync()
         {
             await Task.Delay(100);
             _currentRoomId = null;
         }
 
+        // Отправка выстрела (публичный метод)
         public async Task<bool> SendShootAsync(int row, int col, string roomId)
         {
             await Task.Delay(200);
@@ -170,6 +183,7 @@ namespace BattleOfSea.Services
             return true;
         }
 
+        // Отправка расстановки кораблей (публичный метод)
         public async Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId)
         {
             await Task.Delay(200);

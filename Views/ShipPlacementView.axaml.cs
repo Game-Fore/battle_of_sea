@@ -15,24 +15,27 @@ namespace BattleOfSea.Views
 
         private Dictionary<Models.BoardCell, Border> _cellControls = new();
 
+        // Конструктор представления расстановки (публичный)
         public ShipPlacementView()
         {
             InitializeComponent();
         }
 
+        // Обработчик завершения инициализации (защищенный метод переопределения)
         protected override void OnInitialized()
         {
             base.OnInitialized();
             BuildPlacementBoard();
         }
 
-        // Построить поле
+        // Построить поле расстановки (приватный метод)
         private void BuildPlacementBoard()
         {
             if (DataContext is ViewModels.GameViewModel gvm)
                 BuildBoard(PlacementBoardGrid, gvm.Own, gvm);
         }
 
+        // Обработчик изменения контекста данных (защищенный метод переопределения)
         protected override void OnDataContextChanged(EventArgs e)
         {
             base.OnDataContextChanged(e);
@@ -40,7 +43,7 @@ namespace BattleOfSea.Views
                 BuildPlacementBoard();
         }
 
-        // Построить сетку
+        // Построить сетку (приватный метод)
         private void BuildBoard(Grid grid, Models.Board board, ViewModels.GameViewModel gvm)
         {
             grid.Children.Clear();
@@ -61,7 +64,7 @@ namespace BattleOfSea.Views
             grid.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
             grid.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
 
-            // === COLUMNS ===
+            // === СТОЛБЦЫ ===
             grid.ColumnDefinitions.Add(
                 new ColumnDefinition(new GridLength(HeaderSize, GridUnitType.Pixel)));
 
@@ -71,7 +74,7 @@ namespace BattleOfSea.Views
                     new ColumnDefinition(new GridLength(CellSize, GridUnitType.Pixel)));
             }
 
-            // === ROWS ===
+            // === СТРОКИ ===
             grid.RowDefinitions.Add(
                 new RowDefinition(new GridLength(HeaderSize, GridUnitType.Pixel)));
 
@@ -81,7 +84,7 @@ namespace BattleOfSea.Views
                     new RowDefinition(new GridLength(CellSize, GridUnitType.Pixel)));
             }
 
-            // === COLUMN HEADERS ===
+            // === ЗАГОЛОВКИ СТОЛБЦОВ ===
             for (int col = 0; col < size; col++)
             {
                 var text = new TextBlock
@@ -98,7 +101,7 @@ namespace BattleOfSea.Views
                 grid.Children.Add(text);
             }
 
-            // === ROW HEADERS ===
+            // === ЗАГОЛОВКИ СТРОК ===
             for (int row = 0; row < size; row++)
             {
                 var text = new TextBlock
@@ -115,7 +118,7 @@ namespace BattleOfSea.Views
                 grid.Children.Add(text);
             }
 
-            // === CELLS ===
+            // === ЯЧЕЙКИ ===
             foreach (var cell in board.Cells)
             {
                 var border = new Border
@@ -142,10 +145,12 @@ namespace BattleOfSea.Views
 
                 border.Child = text;
 
+                // Обработчик нажатия на ячейку
                 border.PointerPressed += (s, e) =>
                 {
                     var point = e.GetCurrentPoint(border);
 
+                    // Правая кнопка мыши - удалить корабль
                     if (point.Properties.IsRightButtonPressed && cell.HasShip)
                     {
                         gvm.RemoveShip(cell.Row, cell.Col);
@@ -154,6 +159,7 @@ namespace BattleOfSea.Views
                         return;
                     }
 
+                    // Левая кнопка мыши - разместить корабль
                     if (point.Properties.IsLeftButtonPressed &&
                         gvm.SelectedShipSize.HasValue)
                     {
@@ -176,7 +182,7 @@ namespace BattleOfSea.Views
             }
         }
 
-        // Цвет ячейки
+        // Цвет ячейки (приватный метод)
         private IBrush GetCellBackground(Models.BoardCell cell)
         {
             if (cell.IsSunk) return Brushes.Red;
@@ -185,7 +191,7 @@ namespace BattleOfSea.Views
             return Brushes.AliceBlue;
         }
 
-        // Текст ячейки
+        // Текст ячейки (приватный метод)
         private string GetCellDisplay(Models.BoardCell cell)
         {
             if (cell.IsSunk) return "💥";

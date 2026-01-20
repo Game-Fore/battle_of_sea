@@ -13,19 +13,18 @@ namespace BattleOfSea.ViewModels
     public class GameViewModel : INotifyPropertyChanged
     {
         private GameState _state = GameState.WaitingForOpponent;
-        // Статус игры
+        // Статус игры (публичное свойство)
         public GameState State
         {
             get => _state;
             set
             {
-                // Prevent overwriting terminal states (YouWin/YouLose) once reached with non-terminal states
+                // Предотвращение перезаписи конечных состояний
                 if ((_state == GameState.YouWin || _state == GameState.YouLose) && value != _state)
                 {
-                    // Allow explicit transitions between terminal states (for tests/UI), but ignore transitions to non-terminal states
+                    // Разрешаем переходы только между конечными состояниями
                     if (value != GameState.YouWin && value != GameState.YouLose)
                     {
-                        // Ignore attempts to change terminal state back to non-terminal states (e.g., OpponentTurn)
                         return;
                     }
                 }
@@ -34,6 +33,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
+        // Текст статуса игры (публичное свойство)
         public string StatusText => State switch
         {
             GameState.WaitingForOpponent => "Ожидание соперника...",
@@ -48,44 +48,55 @@ namespace BattleOfSea.ViewModels
             _ => string.Empty
         };
 
+        // Фон статуса игры (публичное свойство)
         public IBrush StatusBackground => State switch
         {
-            GameState.YouWin => new SolidColorBrush(Color.FromRgb(34, 197, 94)), // Green
-            GameState.YouLose => new SolidColorBrush(Color.FromRgb(239, 68, 68)), // Red
-            GameState.Hit => new SolidColorBrush(Color.FromRgb(251, 191, 36)), // Yellow
-            GameState.Sunk => new SolidColorBrush(Color.FromRgb(220, 38, 38)), // Dark Red
-            GameState.Miss => new SolidColorBrush(Color.FromRgb(147, 197, 253)), // Light Blue
-            GameState.YourTurn => new SolidColorBrush(Color.FromRgb(34, 197, 94)), // Green
-            GameState.OpponentTurn => new SolidColorBrush(Color.FromRgb(156, 163, 175)), // Gray
-            _ => new SolidColorBrush(Color.FromRgb(229, 231, 235)) // Light Gray
+            GameState.YouWin => new SolidColorBrush(Color.FromRgb(34, 197, 94)), // Зеленый
+            GameState.YouLose => new SolidColorBrush(Color.FromRgb(239, 68, 68)), // Красный
+            GameState.Hit => new SolidColorBrush(Color.FromRgb(251, 191, 36)), // Желтый
+            GameState.Sunk => new SolidColorBrush(Color.FromRgb(220, 38, 38)), // Темно-красный
+            GameState.Miss => new SolidColorBrush(Color.FromRgb(147, 197, 253)), // Светло-синий
+            GameState.YourTurn => new SolidColorBrush(Color.FromRgb(34, 197, 94)), // Зеленый
+            GameState.OpponentTurn => new SolidColorBrush(Color.FromRgb(156, 163, 175)), // Серый
+            _ => new SolidColorBrush(Color.FromRgb(229, 231, 235)) // Светло-серый
         };
 
+        // Цвет текста статуса (публичное свойство)
         public IBrush StatusForeground => (State == GameState.YouWin || State == GameState.YouLose || 
                                            State == GameState.Hit || State == GameState.Sunk || 
                                            State == GameState.YourTurn) 
             ? Brushes.White : Brushes.Black;
 
+        // Название комнаты (публичное свойство)
         public string? RoomName { get; }
+        // Собственное поле игрока (публичное свойство)
         public Models.Board Own { get; } = new Models.Board(10);
+        // Поле противника (публичное свойство)
         public Models.Board Enemy { get; } = new Models.Board(10);
+        // Менеджер размещения кораблей (публичное свойство)
         public ShipPlacementManager ShipManager { get; } = new ShipPlacementManager();
 
-        // Подсчет кораблей для отображения
+        // Подсчет оставшихся кораблей для отображения (публичные свойства)
         public int OwnRemainingShips => Own.RemainingShipsCount();
         public int EnemyRemainingShips => Enemy.RemainingShipsCount();
 
         private bool _shipsPlaced = false;
+        // Флаг размещения кораблей (публичное свойство)
         public bool ShipsPlaced
         {
             get => _shipsPlaced;
             set { _shipsPlaced = value; OnPropertyChanged(); OnPropertyChanged(nameof(ShowPlacement)); OnPropertyChanged(nameof(ShowGame)); }
         }
 
+        // Показать экран размещения кораблей (публичное свойство)
         public bool ShowPlacement => !_shipsPlaced;
+        // Показать экран игры (публичное свойство)
         public bool ShowGame => _shipsPlaced;
 
+        // Событие запроса выхода из игры (публичное событие)
         public event Action? ExitRequested;
 
+        // Команды управления игрой (публичные свойства)
         public ICommand? ShootCommand { get; private set; }
         public ICommand StartGameCommand { get; private set; }
         public ICommand SelectShipCommand { get; private set; }
@@ -93,6 +104,7 @@ namespace BattleOfSea.ViewModels
         public ICommand RemoveShipCommand { get; private set; }
 
         private int? _selectedShipSize;
+        // Выбранный размер корабля (публичное свойство)
         public int? SelectedShipSize
         {
             get => _selectedShipSize;
@@ -100,6 +112,7 @@ namespace BattleOfSea.ViewModels
         }
 
         private bool _isHorizontal = true;
+        // Горизонтальная ориентация корабля (публичное свойство)
         public bool IsHorizontal
         {
             get => _isHorizontal;
@@ -109,6 +122,7 @@ namespace BattleOfSea.ViewModels
         private readonly Services.INetworkService? _networkService;
         private string? _roomId;
 
+        // Конструктор модели представления игры (публичный)
         public GameViewModel(Models.Room? room = null, Services.INetworkService? networkService = null, bool? demoMode = null)
         {
             _networkService = networkService;
@@ -128,36 +142,34 @@ namespace BattleOfSea.ViewModels
             {
                 State = GameState.WaitingForOpponent;
             }
-            // State будет установлен в YourTurn после размещения всех кораблей
 
-            // Example enemy ships (for demo/test) -- in real game these come from server
-            // Place ships: use override when provided (helps tests), otherwise follow App.DemoMode
+            // Пример кораблей противника (для демо/тестов)
             var useDemo = demoMode ?? App.DemoMode;
             if (useDemo)
             {
-                // Demo mode: place several ships for a more interesting demo
+                // Демо режим: размещаем несколько кораблей для интересной демонстрации
                 Enemy.PlaceShip(0, 0);
-                Enemy.PlaceShip(0, 1); // 2-cell ship
+                Enemy.PlaceShip(0, 1); // 2-палубный корабль
                 Enemy.PlaceShip(2, 3);
                 Enemy.PlaceShip(4, 4);
-                Enemy.PlaceShip(4, 5); // Another 2-cell ship
+                Enemy.PlaceShip(4, 5); // Еще один 2-палубный корабль
                 Enemy.PlaceShip(6, 7);
                 Enemy.PlaceShip(8, 1);
                 Enemy.PlaceShip(8, 2);
-                Enemy.PlaceShip(8, 3); // 3-cell ship
+                Enemy.PlaceShip(8, 3); // 3-палубный корабль
             }
             else
             {
-                // Test mode: place only 3 ships for test scenarios
+                // Режим тестирования: размещаем только 3 корабля для тестовых сценариев
                 Enemy.PlaceShip(0, 0);
-                Enemy.PlaceShip(0, 1); // 2-cell ship
+                Enemy.PlaceShip(0, 1); // 2-палубный корабль
                 Enemy.PlaceShip(2, 3);
             }
 
             // В демо-режиме тоже нужно размещать корабли вручную
-            // In demo mode, user must place ships (same as real game)
             ShipsPlaced = false;
 
+            // Инициализация команд
             ShootCommand = new Utils.RelayCommand(o => {
                 if (o is Models.BoardCell cell) _ = ShootAt(cell);
             });
@@ -193,7 +205,7 @@ namespace BattleOfSea.ViewModels
             });
         }
 
-        // Поставить корабль
+        // Поставить корабль (публичный метод)
         public bool PlaceShip(int r, int c, int size, bool horizontal)
         {
             if (!ShipManager.CanPlaceShip(size)) return false;
@@ -208,7 +220,7 @@ namespace BattleOfSea.ViewModels
             return false;
         }
 
-        // Разместить корабль
+        // Разместить корабль на ячейке (публичный метод)
         public void PlaceShipAtCell(Models.BoardCell cell)
         {
             if (SelectedShipSize.HasValue)
@@ -217,7 +229,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
-        // Удалить корабль
+        // Удалить корабль (публичный метод)
         public void RemoveShip(int r, int c)
         {
             var ships = Own.GetShips();
@@ -236,12 +248,12 @@ namespace BattleOfSea.ViewModels
             }
         }
 
-        // Обработать выстрел
+        // Обработать выстрел (публичный метод)
         public async System.Threading.Tasks.Task ShootAt(Models.BoardCell cell)
         {
             if (cell == null) return;
             if (cell.IsRevealed) return;
-            // In demo mode, allow shooting even if not explicitly "YourTurn"
+            // В демо режиме разрешаем стрелять даже если не "Ваш ход"
             if (!App.DemoMode && State != GameState.YourTurn) return;
 
             // Отправляем выстрел через сеть, если есть подключение
@@ -256,11 +268,11 @@ namespace BattleOfSea.ViewModels
             var result = Enemy.ShootAt(cell.Row, cell.Col);
             if (result == true)
             {
-                // Hit - check if this sank a ship
+                // Попадание - проверяем потоплен ли корабль
                 var sunk = Enemy.IsShipSunkAt(cell.Row, cell.Col);
                 if (sunk == true)
                 {
-                    // Mark all cells of the sunk ship as sunk
+                    // Помечаем все ячейки потопленного корабля
                     var ships = Enemy.GetShips();
                     foreach (var ship in ships)
                     {
@@ -282,15 +294,15 @@ namespace BattleOfSea.ViewModels
                     Console.WriteLine($"Shot hit at {cell.Row},{cell.Col}");
                 }
 
-                // Check for victory
+                // Проверяем победу
                 if (Enemy.AllShipsSunk())
                 {
                     State = GameState.YouWin;
                     Console.WriteLine("All enemy ships sunk — you win!");
                     Console.WriteLine("DEBUG: State after AllShipsSunk set to " + State);
-                    // Show victory dialog
+                    // Показываем диалог победы
                     ShowVictoryDialog();
-                    // Ensure we exit early and never transition to OpponentTurn after a win
+                    // Убеждаемся, что выходим рано и не переходим к OpponentTurn после победы
                     return;
                 }
             }
@@ -305,24 +317,22 @@ namespace BattleOfSea.ViewModels
                 return;
             }
 
-            // Keep status visible longer so user can read it (2 seconds for Hit/Miss/Sunk)
+            // Оставляем статус видимым дольше (2 секунды для Hit/Miss/Sunk)
             if (State == GameState.Hit || State == GameState.Miss || State == GameState.Sunk)
             {
-                await System.Threading.Tasks.Task.Delay(2000); // 2 seconds to read the status
+                await System.Threading.Tasks.Task.Delay(2000); // 2 секунды для чтения статуса
             }
 
-            // Double-check: if we've become YouWin/YouLose (race or callback), don't change state
+            // Двойная проверка: если мы стали YouWin/YouLose, не меняем состояние
             if (State == GameState.YouWin || State == GameState.YouLose)
             {
-                // Update counters and return without switching to opponent
+                // Обновляем счетчики и возвращаемся без переключения на противника
                 OnPropertyChanged(nameof(OwnRemainingShips));
                 OnPropertyChanged(nameof(EnemyRemainingShips));
                 return;
             }
 
-            // Always transition to opponent turn after shot
-            // In demo mode or with network, handle appropriately
-            // Simple opponent response simulation: wait then set to opponent turn
+            // Всегда переходим к ходу противника после выстрела
             await System.Threading.Tasks.Task.Delay(500);
             State = GameState.OpponentTurn;
 
@@ -331,10 +341,7 @@ namespace BattleOfSea.ViewModels
             OnPropertyChanged(nameof(EnemyRemainingShips));
         }
 
-        /// <summary>
-        /// Обработка истечения времени на ход
-        /// </summary>
-        // Обработать таймаут
+        // Обработать таймаут (публичный метод)
         public void HandleTimeExpired()
         {
             if (State == GameState.YourTurn && ShipsPlaced)
@@ -350,7 +357,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
-        // Симуляция противника
+        // Симуляция выстрела противника (приватный метод)
         private async System.Threading.Tasks.Task SimulateOpponentShot()
         {
             await System.Threading.Tasks.Task.Delay(1000);
@@ -379,10 +386,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
-        /// <summary>
-        /// Обработка выстрела противника по моему полю
-        /// </summary>
-        // Обработка выстрела
+        // Обработка выстрела противника (публичный метод)
         public bool? HandleOpponentShot(int row, int col)
         {
             if (State == GameState.YouWin || State == GameState.YouLose)
@@ -440,6 +444,7 @@ namespace BattleOfSea.ViewModels
             return null;
         }
 
+        // Показать диалог поражения (приватный метод)
         private async void ShowDefeatDialog()
         {
             await System.Threading.Tasks.Task.Delay(500);
@@ -455,11 +460,13 @@ namespace BattleOfSea.ViewModels
             });
         }
 
+        // Запросить выход из игры (публичный метод)
         public void RequestExit() => ExitRequested?.Invoke();
 
+        // Показать диалог победы (приватный метод)
         private async void ShowVictoryDialog()
         {
-            await System.Threading.Tasks.Task.Delay(500); // Small delay for visual effect
+            await System.Threading.Tasks.Task.Delay(500); // Небольшая задержка для визуального эффекта
             Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
             {
                 var dialog = new Views.VictoryDialog(true);
@@ -472,8 +479,7 @@ namespace BattleOfSea.ViewModels
             });
         }
 
-        // Обработчики сетевых событий (День 9: Синхронизация состояний)
-        // Результат выстрела
+        // Обработчик результата выстрела от сервера (приватный метод)
         private async void OnShootResultReceived(Models.ShootResultMessage message)
         {
             var cell = Enemy.GetCell(message.Row, message.Col);
@@ -532,7 +538,7 @@ namespace BattleOfSea.ViewModels
             OnPropertyChanged(nameof(EnemyRemainingShips));
         }
 
-        // Ход соперника
+        // Обработчик выстрела противника от сервера (приватный метод)
         private async void OnOpponentShootReceived(Models.ShootMessage message)
         {
             if (message.RoomId != _roomId) return;
@@ -554,7 +560,7 @@ namespace BattleOfSea.ViewModels
             }
         }
 
-        // Изменение состояния
+        // Обработчик изменения состояния игры от сервера (приватный метод)
         private void OnGameStateChanged(Models.GameStateMessage message)
         {
             if (message.RoomId == _roomId)
@@ -563,7 +569,9 @@ namespace BattleOfSea.ViewModels
             }
         }
 
+        // Событие изменения свойства (публичное событие)
         public event PropertyChangedEventHandler? PropertyChanged;
+        // Уведомление об изменении свойства (приватный метод)
         private void OnPropertyChanged([CallerMemberName] string? name = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }

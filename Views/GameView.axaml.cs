@@ -8,12 +8,14 @@ namespace BattleOfSea.Views
     {
         private Controls.TimerControl? _timerControl;
 
+        // Конструктор представления игры (публичный)
         public GameView()
         {
             InitializeComponent();
-            // DataContext will be set by the host (MainWindow) so we can pass a Room
+            // DataContext будет установлен хостом (MainWindow), чтобы передать комнату
         }
 
+        // Обработчик изменения контекста данных (защищенный метод переопределения)
         protected override void OnDataContextChanged(EventArgs e)
         {
             base.OnDataContextChanged(e);
@@ -47,6 +49,7 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Обновление состояния таймера (приватный метод)
         private void UpdateTimer(ViewModels.GameViewModel gvm)
         {
             if (_timerControl == null) return;
@@ -63,7 +66,7 @@ namespace BattleOfSea.Views
             }
         }
 
-        // День 12: UX улучшения - подтверждение выхода
+        // Обработчик клика "Выйти в лобби" (приватный метод)
         private async void ExitToLobby_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             if (DataContext is ViewModels.GameViewModel gvm)
@@ -91,10 +94,24 @@ namespace BattleOfSea.Views
             }
         }
 
-        private void OpenChat_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        // Обработчик клика "Открыть чат" (приватный метод)
+        private async void OpenChat_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            // Placeholder для открытия чата
-            // Когда второй разработчик закончит чат, можно будет вызвать его здесь
+            // Создаем окно чата
+            var chatWindow = new ChatWindow();
+            
+            // Получаем родительское окно (MainWindow)
+            var parent = this.VisualRoot as Window;
+            if (parent != null)
+            {
+                // Открываем диалоговое окно (блокирует взаимодействие с родителем)
+                await chatWindow.ShowDialog(parent);
+            }
+            else
+            {
+                // Если не нашли родителя, просто показываем окно
+                chatWindow.Show();
+            }
         }
     }
 }

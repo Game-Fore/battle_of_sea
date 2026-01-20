@@ -3,9 +3,11 @@ using BattleOfSea.ViewModels;
 
 namespace BattleOfSea.Tests
 {
+    // Тесты для модели представления создания комнаты
     public class CreateRoomViewModelTests
     {
         [Fact]
+        // Тест проверки возможности создания комнаты при пустом имени (публичный метод)
         public void CanCreate_IsFalse_WhenNameEmpty()
         {
             var vm = new CreateRoomViewModel();
@@ -14,6 +16,7 @@ namespace BattleOfSea.Tests
         }
 
         [Fact]
+        // Тест проверки возможности создания комнаты при указанном имени (публичный метод)
         public void CanCreate_IsTrue_WhenNameProvided()
         {
             var vm = new CreateRoomViewModel();

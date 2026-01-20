@@ -8,28 +8,30 @@ namespace BattleOfSea.Services
 {
     public interface INetworkService
     {
-        // Подключение
+        // Подключение к серверу
         Task<bool> ConnectAsync(string userId, string displayName);
+        // Отключение от сервера
         Task DisconnectAsync();
+        // Флаг подключения
         bool IsConnected { get; }
 
         // Комнаты
-        Task<List<Room>> GetRoomsAsync();
-        Task<bool> JoinRoomAsync(Room room, string? password = null);
-        Task<bool> CreateRoomAsync(Room room, string? password = null);
-        Task LeaveRoomAsync();
+        Task<List<Room>> GetRoomsAsync(); // Получить список игровых комнат
+        Task<bool> JoinRoomAsync(Room room, string? password = null); // Присоединиться к комнате
+        Task<bool> CreateRoomAsync(Room room, string? password = null); // Создать новую комнату
+        Task LeaveRoomAsync(); // Покинуть текущую комнату
 
         // Игровые действия
-        Task<bool> SendShootAsync(int row, int col, string roomId);
-        Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId);
+        Task<bool> SendShootAsync(int row, int col, string roomId); // Отправить выстрел
+        Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId); // Отправить расстановку кораблей
 
-        // События
-        event Action<ShootResultMessage>? ShootResultReceived;
-        event Action<ShootMessage>? OpponentShootReceived;
-        event Action<GameStateMessage>? GameStateChanged;
-        event Action<RoomsListMessage>? RoomsListUpdated;
-        event Action<JoinRoomMessage>? JoinRoomResult;
-        event Action<UserConnectedMessage>? UserConnected;
-        event Action<string>? ConnectionError;
+        // События сетевого взаимодействия
+        event Action<ShootResultMessage>? ShootResultReceived; // Получен результат выстрела
+        event Action<ShootMessage>? OpponentShootReceived; // Противник сделал выстрел
+        event Action<GameStateMessage>? GameStateChanged; // Изменилось состояние игры
+        event Action<RoomsListMessage>? RoomsListUpdated; // Обновился список комнат
+        event Action<JoinRoomMessage>? JoinRoomResult; // Результат присоединения к комнате
+        event Action<UserConnectedMessage>? UserConnected; // Пользователь подключился
+        event Action<string>? ConnectionError; // Ошибка соединения
     }
 }

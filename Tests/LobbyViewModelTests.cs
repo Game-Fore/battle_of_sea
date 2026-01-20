@@ -6,9 +6,11 @@ using System.Threading;
 
 namespace BattleOfSea.Tests
 {
+    // Тесты для модели представления лобби
     public class LobbyViewModelTests
     {
         [Fact]
+        // Тест добавления комнаты в список (публичный метод)
         public void AddRoom_AddsRoom_WhenNotFull()
         {
             var vm = new LobbyViewModel();
@@ -19,6 +21,7 @@ namespace BattleOfSea.Tests
         }
 
         [Fact]
+        // Тест команды присоединения к комнате (публичный метод)
         public async Task JoinCommand_InvokesJoinRequested_OnSuccess()
         {
             var vm = new LobbyViewModel(new Services.MockNetworkService());

@@ -6,8 +6,10 @@ namespace BattleOfSea.Views
 {
     public partial class ConfirmDialog : Window
     {
+        // Результат диалога (публичное свойство)
         public bool Result { get; private set; } = false;
 
+        // Сообщение диалога (публичное свойство)
         public string Message
         {
             get => (DataContext as ConfirmDialogViewModel)?.Message ?? "";
@@ -20,18 +22,21 @@ namespace BattleOfSea.Views
             }
         }
 
+        // Конструктор диалога подтверждения (публичный)
         public ConfirmDialog()
         {
             InitializeComponent();
             DataContext = new ConfirmDialogViewModel();
         }
 
+        // Обработчик клика "Да" (приватный метод)
         private void Yes_Click(object? sender, RoutedEventArgs e)
         {
             Result = true;
             Close(true);
         }
 
+        // Обработчик клика "Нет" (приватный метод)
         private void No_Click(object? sender, RoutedEventArgs e)
         {
             Result = false;
@@ -39,9 +44,10 @@ namespace BattleOfSea.Views
         }
     }
 
+    // Модель представления диалога подтверждения
     public class ConfirmDialogViewModel
     {
+        // Сообщение диалога (публичное свойство)
         public string Message { get; set; } = "Вы уверены?";
     }
 }
-

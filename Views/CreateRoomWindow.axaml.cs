@@ -6,16 +6,19 @@ namespace BattleOfSea.Views
 {
     public partial class CreateRoomWindow : Window
     {
+        // Конструктор окна создания комнаты (публичный)
         public CreateRoomWindow()
         {
             InitializeComponent();
         }
 
+        // Обработчик клика "Отмена" (приватный метод)
         private void Cancel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             this.Close((Models.Room?)null);
         }
 
+        // Обработчик клика "Создать" (приватный метод)
         private void Create_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             var vm = DataContext as ViewModels.CreateRoomViewModel;

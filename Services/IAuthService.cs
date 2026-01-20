@@ -3,17 +3,19 @@ using BattleOfSea.Models;
 
 namespace BattleOfSea.Services
 {
-    /// <summary>
-    /// Сервис авторизации (День 11: Авторизация/пользователи)
-    /// </summary>
+    // Сервис авторизации
     public interface IAuthService
     {
+        // Текущий пользователь
         User? CurrentUser { get; }
+        // Авторизован ли пользователь
         bool IsAuthenticated { get; }
         
+        // Вход пользователя
         Task<bool> LoginAsync(string userId, string displayName);
+        // Выход пользователя
         Task LogoutAsync();
+        // Получение текущего пользователя
         Task<User?> GetCurrentUserAsync();
     }
 }
-

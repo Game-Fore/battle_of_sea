@@ -11,7 +11,7 @@ using BattleOfSea.Models;
 
 namespace BattleOfSea.Services
 {
-    // Сетевой сервис
+    // Реальный WebSocket сетевой сервис
     public class NetworkService : INetworkService
     {
         private ClientWebSocket? _webSocket;
@@ -21,24 +21,32 @@ namespace BattleOfSea.Services
         private string? _currentUserId;
         private string? _currentRoomId;
 
+        // Флаг подключения к серверу (публичное свойство)
         public bool IsConnected => _isConnected;
 
-        // События
+        // Событие получения результата выстрела (публичное событие)
         public event Action<ShootResultMessage>? ShootResultReceived;
+        // Событие получения выстрела противника (публичное событие)
         public event Action<ShootMessage>? OpponentShootReceived;
+        // Событие изменения состояния игры (публичное событие)
         public event Action<GameStateMessage>? GameStateChanged;
+        // Событие обновления списка комнат (публичное событие)
         public event Action<RoomsListMessage>? RoomsListUpdated;
+        // Событие результата присоединения к комнате (публичное событие)
         public event Action<JoinRoomMessage>? JoinRoomResult;
+        // Событие подключения пользователя (публичное событие)
         public event Action<UserConnectedMessage>? UserConnected;
+        // Событие ошибки соединения (публичное событие)
         public event Action<string>? ConnectionError;
 
-        public NetworkService(string serverHost = "localhost", int serverPort = 5000)
+        // Конструктор сетевого сервиса (публичный)
+        public NetworkService(string serverHost = "localhost", int serverPort = 5500)
         {
             _serverUrl = $"ws://{serverHost}:{serverPort}";
             _isConnected = false;
         }
 
-        // Подключение асинхр
+        // Подключение асинхр (публичный метод)
         public async Task<bool> ConnectAsync(string userId, string displayName)
         {
             try
@@ -86,7 +94,7 @@ namespace BattleOfSea.Services
             }
         }
 
-        // Отключение асинхр
+        // Отключение асинхр (публичный метод)
         public async Task DisconnectAsync()
         {
             try
@@ -113,6 +121,7 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Получение списка комнат (публичный метод)
         public async Task<List<Room>> GetRoomsAsync()
         {
             try
@@ -132,6 +141,7 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Создание комнаты (публичный метод)
         public async Task<bool> CreateRoomAsync(Room room, string? password = null)
         {
             try
@@ -155,6 +165,7 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Присоединение к комнате (публичный метод)
         public async Task<bool> JoinRoomAsync(Room room, string? password = null)
         {
             try
@@ -179,6 +190,7 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Выход из комнаты (публичный метод)
         public async Task LeaveRoomAsync()
         {
             try
@@ -200,7 +212,7 @@ namespace BattleOfSea.Services
             }
         }
 
-        // Отправить выстрел
+        // Отправить выстрел (публичный метод)
         public async Task<bool> SendShootAsync(int row, int col, string roomId)
         {
             try
@@ -225,7 +237,7 @@ namespace BattleOfSea.Services
             }
         }
 
-        // Отправить расстановку
+        // Отправить расстановку кораблей (публичный метод)
         public async Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId)
         {
             try
@@ -249,6 +261,7 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Отправить сообщение на сервер (приватный метод)
         private async Task SendMessageAsync(object message)
         {
             if (_webSocket?.State != WebSocketState.Open)
@@ -269,6 +282,7 @@ namespace BattleOfSea.Services
 
         }
 
+        // Прослушивание сообщений от сервера (приватный метод)
         private async Task ListenForMessagesAsync()
         {
             try
@@ -309,7 +323,7 @@ namespace BattleOfSea.Services
             }
         }
 
-        // Обработать сообщение
+        // Обработать сообщение от сервера (приватный метод)
         private void HandleServerMessage(string json)
         {
             try
@@ -348,6 +362,7 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Обработка списка комнат (приватный метод)
         private void HandleRoomsListMessage(string json)
         {
             try
@@ -364,6 +379,7 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Обработка присоединения к комнате (приватный метод)
         private void HandleJoinRoomMessage(string json)
         {
             try
@@ -380,7 +396,7 @@ namespace BattleOfSea.Services
             }
         }
 
-        // Результат выстрела
+        // Результат выстрела (приватный метод)
         private void HandleShootResultMessage(string json)
         {
             try
@@ -397,7 +413,7 @@ namespace BattleOfSea.Services
             }
         }
 
-        // Ход противника
+        // Ход противника (приватный метод)
         private void HandleOpponentShootMessage(string json)
         {
             try
@@ -414,6 +430,7 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Обработка состояния игры (приватный метод)
         private void HandleGameStateMessage(string json)
         {
             try
