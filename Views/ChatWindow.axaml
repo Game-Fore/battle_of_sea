@@ -10,12 +10,12 @@
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
-	<!-- Основной фон -->
+	<!-- Основной фон7 -->
 	<Grid Background="#F8FAFC">
 		<Grid Margin="6">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
-				<!-- Панель подключения -->
+				<!-- Панель подключения  -->
 				<RowDefinition Height="*"/>
 				<!-- История сообщений (занимает всё доступное) -->
 				<RowDefinition Height="Auto"/>
