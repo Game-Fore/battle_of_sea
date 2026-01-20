@@ -113,4 +113,19 @@ namespace BattleOfSea.Models
         // Отображаемое имя
         public string DisplayName { get; set; } = string.Empty;
     }
+
+    // Сообщение чата от пользователя
+    public class ChatMessage : NetworkMessage
+    {
+        // ID пользователя отправителя
+        public string UserId { get; set; } = string.Empty;
+        // Имя отправителя
+        public string SenderName { get; set; } = string.Empty;
+        // Текст сообщения
+        public string Text { get; set; } = string.Empty;
+        // ID комнаты (если применимо)
+        public string? RoomId { get; set; }
+        // Является ли системным сообщением
+        public bool IsSystemMessage { get; set; }
+    }
 }

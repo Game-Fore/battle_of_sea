@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using BattleOfSea.Services;
+using BattleOfSea.Models;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -12,12 +13,14 @@ namespace BattleOfSea.Views
 {
     public partial class ChatWindow : Window
     {
-        private ObservableCollection<ChatMessage> messages = new ObservableCollection<ChatMessage>();
         private bool isConnected = false;
         private string playerName = "Адмирал";
+        private string userId = "";
 
-        // Сетевой клиент для связи с сервером
-        private SimpleChatClient? _networkClient;
+        // Сетевой сервис для связи с сервером
+        private NetworkService? _networkService;
+        // Флаг использования только локального чата (без сервера)
+        private bool _useLocalChat = false;
 
         // Элементы управления из XAML
         private TextBox? messageTextBox;
@@ -79,16 +82,8 @@ namespace BattleOfSea.Views
                 playerNameTextBox.KeyDown += (s, e) => PlayerNameTextBox_KeyDown(s, e);
             }
 
-            // Создаем сетевой клиент
-            _networkClient = new SimpleChatClient();
-
-            // Подписываемся на события клиента
-            if (_networkClient != null)
-            {
-                _networkClient.MessageReceived += OnNetworkMessageReceived;
-                _networkClient.StatusChanged += OnNetworkStatusChanged;
-                _networkClient.ConnectionChanged += OnNetworkConnectionChanged;
-            }
+            // Генерируем уникальный ID для пользователя
+            userId = $"player_{Guid.NewGuid().ToString().Substring(0, 8)}";
 
             // Назначаем обработчики кнопок
             if (connectButton != null)
@@ -143,127 +138,39 @@ namespace BattleOfSea.Views
             }
         }
 
-        // Получили сообщение от сервера
-        private void OnNetworkMessageReceived(string message)
+        // Получили сообщение чата от сервера
+        private void OnChatMessageReceived(Models.ChatMessage message)
         {
-            // Работаем в UI потоке
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                if (message.StartsWith("[СИСТЕМА]"))
+                if (message.IsSystemMessage)
                 {
-                    AddSystemMessage(message.Substring(9));
+                    AddSystemMessage(message.Text);
                 }
-                else if (message.Contains(":"))
+                else if (message.UserId == userId)
                 {
-                    int colonIndex = message.IndexOf(':');
-                    if (colonIndex > 0)
-                    {
-                        string sender = message.Substring(0, colonIndex).Trim();
-                        string text = message.Substring(colonIndex + 1).Trim();
-
-                        if (sender == playerName)
-                            AddGameMessage(text);
-                        else
-                            AddOpponentMessage($"{sender}: {text}");
-                    }
-                    else
-                    {
-                        AddSystemMessage(message);
-                    }
+                    AddGameMessage(message.Text);
                 }
                 else
                 {
-                    AddSystemMessage(message);
+                    AddOpponentMessage($"{message.SenderName}: {message.Text}");
                 }
-            });
-        }
-
-        // Изменился статус сети
-        private void OnNetworkStatusChanged(string status)
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                AddSystemMessage(status);
-
-                // Обновляем текст статуса
-                if (statusText != null)
-                {
-                    if (status.Contains("✅"))
-                        statusText.Text = "Подключено";
-                    else if (status.Contains("❌"))
-                        statusText.Text = "Ошибка";
-                    else if (status.Contains("🔌"))
-                        statusText.Text = "Не подключено";
-                    else if (status.Contains("Подключение"))
-                        statusText.Text = "Подключение...";
-                    else
-                        statusText.Text = "Статус";
-                }
-            });
-        }
-
-        // Подключились или отключились
-        private void OnNetworkConnectionChanged(bool isConnected)
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                this.isConnected = isConnected;
-
-                // Обновляем кнопки
-                if (connectButton != null)
-                {
-                    connectButton.IsEnabled = !isConnected;
-                    connectButton.Content = isConnected ? "Подключено" : "Подключиться";
-                }
-
-                if (disconnectButton != null)
-                    disconnectButton.IsEnabled = isConnected;
-
-                // Меняем цвет индикатора
-                if (statusIndicator != null)
-                {
-                    statusIndicator.Background = new Avalonia.Media.SolidColorBrush(
-                        isConnected ? 0xFF10B981 : 0xFFEF4444); // Зеленый/Красный
-                }
-
-                // Включаем/выключаем поля
-                if (messageTextBox != null)
-                {
-                    messageTextBox.IsEnabled = isConnected;
-                    messageTextBox.Watermark = isConnected ?
-                        "Введите сообщение..." : "Подключитесь к серверу...";
-                }
-
-                if (playerNameTextBox != null)
-                {
-                    playerNameTextBox.IsEnabled = !isConnected; // Имя можно менять только когда отключены
-                }
-
-                if (sendButton != null)
-                    sendButton.IsEnabled = isConnected;
             });
         }
 
         // Подключение к серверу
         private async void ConnectButton_Click(object? sender, RoutedEventArgs e)
         {
-            if (serverTextBox == null || portTextBox == null || playerNameTextBox == null)
+            if (serverTextBox == null || playerNameTextBox == null)
                 return;
 
-            string server = serverTextBox.Text ?? "";
-            string portText = portTextBox.Text ?? "";
+            string server = serverTextBox.Text ?? "localhost";
             string name = playerNameTextBox.Text?.Trim() ?? "";
 
-            // Проверяем данные
+            // Проверяем имя
             if (string.IsNullOrWhiteSpace(name))
             {
                 AddSystemMessage("Введите ваше имя!", true);
-                return;
-            }
-
-            if (!int.TryParse(portText, out int port))
-            {
-                AddSystemMessage("Неверный порт!", true);
                 return;
             }
 
@@ -276,32 +183,87 @@ namespace BattleOfSea.Views
                 connectButton.Content = "Подключение...";
             }
 
-            AddSystemMessage($"Подключаюсь к {server}:{port}...");
+            AddSystemMessage($"Подключаюсь к {server}:5000...");
+
+            // Создаем сетевой сервис для WebSocket
+            _networkService = new NetworkService(server, 5000);
+            _networkService.ChatMessageReceived += OnChatMessageReceived;
 
             // Пытаемся подключиться
-            bool connected = await _networkClient!.ConnectAsync(server, port);
+            bool connected = await _networkService.ConnectAsync(userId, playerName);
 
             if (connected)
             {
-                // Отправляем имя на сервер
-                await _networkClient.SendMessageAsync(playerName);
-                AddSystemMessage($"Вы вошли как: {playerName}");
+                isConnected = true;
+                _useLocalChat = false;
+                
+                // Обновляем кнопки
+                if (connectButton != null)
+                {
+                    connectButton.IsEnabled = false;
+                    connectButton.Content = "Подключено";
+                }
+                if (disconnectButton != null)
+                    disconnectButton.IsEnabled = true;
+                if (sendButton != null)
+                    sendButton.IsEnabled = true;
+                if (messageTextBox != null)
+                    messageTextBox.IsEnabled = true;
+                if (statusIndicator != null)
+                    statusIndicator.Background = new Avalonia.Media.SolidColorBrush(0xFF10B981);
+
+                AddSystemMessage($"✅ Успешно подключены как: {playerName}");
             }
             else
             {
-                // Восстанавливаем кнопку
+                // Ошибка подключения - используем локальный чат
+                _useLocalChat = true;
+                isConnected = true;
+                
                 if (connectButton != null)
                 {
-                    connectButton.IsEnabled = true;
-                    connectButton.Content = "Подключиться";
+                    connectButton.IsEnabled = false;
+                    connectButton.Content = "Локальный чат";
                 }
+                if (disconnectButton != null)
+                    disconnectButton.IsEnabled = true;
+                if (sendButton != null)
+                    sendButton.IsEnabled = true;
+                if (messageTextBox != null)
+                    messageTextBox.IsEnabled = true;
+                if (statusIndicator != null)
+                    statusIndicator.Background = new Avalonia.Media.SolidColorBrush(0xFFFAA43A);
+
+                AddSystemMessage($"⚠️ Не удалось подключиться к серверу. Используется локальный чат.");
             }
         }
 
         // Отключение от сервера
-        private void DisconnectButton_Click(object? sender, RoutedEventArgs e)
+        private async void DisconnectButton_Click(object? sender, RoutedEventArgs e)
         {
-            _networkClient?.Disconnect();
+            if (_networkService != null && isConnected)
+            {
+                await _networkService.DisconnectAsync();
+            }
+            
+            isConnected = false;
+            _useLocalChat = false;
+            
+            if (connectButton != null)
+            {
+                connectButton.IsEnabled = true;
+                connectButton.Content = "Подключиться";
+            }
+            if (disconnectButton != null)
+                disconnectButton.IsEnabled = false;
+            if (sendButton != null)
+                sendButton.IsEnabled = false;
+            if (messageTextBox != null)
+                messageTextBox.IsEnabled = false;
+            if (statusIndicator != null)
+                statusIndicator.Background = new Avalonia.Media.SolidColorBrush(0xFFEF4444);
+            
+            AddSystemMessage("Отключены от сервера");
         }
 
         // Отправка сообщения по кнопке
@@ -320,7 +282,7 @@ namespace BattleOfSea.Views
         }
 
         // Основной метод отправки
-        private void SendMessage()
+        private async void SendMessage()
         {
             if (messageTextBox == null) return;
 
@@ -334,7 +296,7 @@ namespace BattleOfSea.Views
                     var originalBorder = messageTextBox.BorderBrush;
                     messageTextBox.BorderBrush = new Avalonia.Media.SolidColorBrush(0xFFFF6B6B);
 
-                    Task.Delay(300).ContinueWith(t =>
+                    _ = Task.Delay(300).ContinueWith(t =>
                     {
                         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
@@ -345,17 +307,25 @@ namespace BattleOfSea.Views
                 return;
             }
 
-            // Если подключены - отправляем на сервер
-            if (_networkClient?.IsConnected == true)
+            // Если подключены к серверу
+            if (!_useLocalChat && _networkService != null && _networkService.IsConnected)
             {
-                _ = _networkClient.SendMessageAsync(messageText);
-                AddGameMessage(messageText);
+                bool sent = await _networkService.SendChatMessageAsync(messageText);
+                if (sent)
+                {
+                    AddGameMessage(messageText);
+                }
+                else
+                {
+                    AddSystemMessage("Ошибка отправки сообщения", true);
+                }
             }
             else
             {
                 // Локальное сообщение
-                AddSystemMessage("Нет подключения к серверу");
                 AddGameMessage(messageText);
+                if (!isConnected)
+                    AddSystemMessage("Сообщение отправлено локально (не подключены)");
             }
 
             // Очищаем поле и фокусируемся
@@ -510,10 +480,14 @@ namespace BattleOfSea.Views
         }
 
         // При закрытии окна
-        protected override void OnClosed(EventArgs e)
+        protected override async void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
-            _networkClient?.Dispose(); // Освобождаем ресурсы
+            // Отключаемся от сервера при закрытии окна
+            if (_networkService != null && isConnected)
+            {
+                await _networkService.DisconnectAsync();
+            }
         }
 
         // Класс для хранения информации о сообщении

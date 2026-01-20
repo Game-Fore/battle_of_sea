@@ -24,6 +24,7 @@ namespace BattleOfSea.Services
         // Игровые действия
         Task<bool> SendShootAsync(int row, int col, string roomId); // Отправить выстрел
         Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId); // Отправить расстановку кораблей
+        Task<bool> SendChatMessageAsync(string text, string? roomId = null); // Отправить сообщение чата
 
         // События сетевого взаимодействия
         event Action<ShootResultMessage>? ShootResultReceived; // Получен результат выстрела
@@ -32,6 +33,7 @@ namespace BattleOfSea.Services
         event Action<RoomsListMessage>? RoomsListUpdated; // Обновился список комнат
         event Action<JoinRoomMessage>? JoinRoomResult; // Результат присоединения к комнате
         event Action<UserConnectedMessage>? UserConnected; // Пользователь подключился
+        event Action<ChatMessage>? ChatMessageReceived; // Получено сообщение чата
         event Action<string>? ConnectionError; // Ошибка соединения
     }
 }

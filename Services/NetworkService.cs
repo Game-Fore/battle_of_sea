@@ -36,6 +36,8 @@ namespace BattleOfSea.Services
         public event Action<JoinRoomMessage>? JoinRoomResult;
         // Событие подключения пользователя (публичное событие)
         public event Action<UserConnectedMessage>? UserConnected;
+        // Событие получения сообщения чата (публичное событие)
+        public event Action<ChatMessage>? ChatMessageReceived;
         // Событие ошибки соединения (публичное событие)
         public event Action<string>? ConnectionError;
 
@@ -261,6 +263,31 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Отправить сообщение чата (публичный метод)
+        public async Task<bool> SendChatMessageAsync(string text, string? roomId = null)
+        {
+            try
+            {
+                var message = new
+                {
+                    type = "ChatMessage",
+                    userId = _currentUserId,
+                    text = text,
+                    roomId = roomId ?? _currentRoomId,
+                    timestamp = DateTime.UtcNow.ToString("O")
+                };
+
+                await SendMessageAsync(message);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending chat message: {ex.Message}");
+                ConnectionError?.Invoke($"Failed to send chat message: {ex.Message}");
+                return false;
+            }
+        }
+
         // Отправить сообщение на сервер (приватный метод)
         private async Task SendMessageAsync(object message)
         {
@@ -349,6 +376,9 @@ namespace BattleOfSea.Services
                             break;
                         case "GameState":
                             HandleGameStateMessage(json);
+                            break;
+                        case "ChatMessage":
+                            HandleChatMessage(json);
                             break;
                         default:
                             // Unknown message type - ignore or log in future if needed
@@ -444,6 +474,23 @@ namespace BattleOfSea.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error deserializing game state: {ex.Message}");
+            }
+        }
+
+        // Обработка сообщения чата (приватный метод)
+        private void HandleChatMessage(string json)
+        {
+            try
+            {
+                var message = JsonSerializer.Deserialize<ChatMessage>(json);
+                if (message != null)
+                {
+                    ChatMessageReceived?.Invoke(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deserializing chat message: {ex.Message}");
             }
         }
     }
