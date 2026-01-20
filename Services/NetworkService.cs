@@ -40,7 +40,7 @@ namespace BattleOfSea.Services
         public event Action<string>? ConnectionError;
 
         // Конструктор сетевого сервиса (публичный)
-        public NetworkService(string serverHost = "localhost", int serverPort = 5500)
+        public NetworkService(string serverHost = "localhost", int serverPort = 5000)
         {
             _serverUrl = $"ws://{serverHost}:{serverPort}";
             _isConnected = false;

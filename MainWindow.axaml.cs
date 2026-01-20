@@ -14,8 +14,8 @@ namespace BattleOfSea
         {
             InitializeComponent();
 
-            // Инициализируем сетевой сервис
-            _networkService = new Services.MockNetworkService();
+            // Инициализируем сетевой сервис - требует реального подключения к серверу (ws://localhost:5000)
+            _networkService = new Services.NetworkService("localhost", 5000);
 
             // Кэшируем элементы управления и подписываемся на запросы присоединения к комнатам
             _mainContent = this.FindControl<ContentControl>("MainContent");

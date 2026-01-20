@@ -1,202 +1,50 @@
-// Мок сети
+// DEPRECATED: Этот класс больше не поддерживается
+// Все игры должны подключаться к реальному серверу
+// Использование этого класса запрещено
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BattleOfSea.Models;
 
 namespace BattleOfSea.Services
 {
-    // Заглушка сетевого сервиса для тестирования
+    // DEPRECATED: Этот класс больше не используется
+    // Все операции требуют реального подключения к серверу
+    [Obsolete("MockNetworkService is deprecated. Use NetworkService with a real server.", true)]
     public class MockNetworkService : INetworkService
     {
-        private bool _isConnected = false;
-        private string? _currentUserId;
-        private string? _currentRoomId;
-        private readonly Random _random = new Random();
-        private readonly List<Room> _mockRooms = new List<Room>();
+        public bool IsConnected => throw new NotSupportedException("MockNetworkService is not supported. Connect to a real server on port 5000.");
+        public event Action<ShootResultMessage>? ShootResultReceived { add { } remove { } }
+        public event Action<ShootMessage>? OpponentShootReceived { add { } remove { } }
+        public event Action<GameStateMessage>? GameStateChanged { add { } remove { } }
+        public event Action<RoomsListMessage>? RoomsListUpdated { add { } remove { } }
+        public event Action<JoinRoomMessage>? JoinRoomResult { add { } remove { } }
+        public event Action<UserConnectedMessage>? UserConnected { add { } remove { } }
+        public event Action<string>? ConnectionError { add { } remove { } }
 
-        // Флаг подключения к серверу (публичное свойство)
-        public bool IsConnected => _isConnected;
-
-        // Событие получения результата выстрела (публичное событие)
-        public event Action<ShootResultMessage>? ShootResultReceived;
-        // Событие получения выстрела противника (публичное событие)
-        public event Action<ShootMessage>? OpponentShootReceived;
-        // Событие изменения состояния игры (публичное событие)
-        public event Action<GameStateMessage>? GameStateChanged;
-        // Событие обновления списка комнат (публичное событие)
-        public event Action<RoomsListMessage>? RoomsListUpdated;
-        // Событие результата присоединения к комнате (публичное событие)
-        public event Action<JoinRoomMessage>? JoinRoomResult;
-        // Событие подключения пользователя (публичное событие)
-        public event Action<UserConnectedMessage>? UserConnected;
-        #pragma warning disable CS0067 // Event is never used - reserved for future use
-        // Событие ошибки соединения (публичное событие)
-        public event Action<string>? ConnectionError;
-        #pragma warning restore CS0067
-
-        // Конструктор сервиса (публичный)
-        public MockNetworkService()
-        {
-            InitializeMockRooms();
-        }
-
-        // Инициализация тестовых комнат (приватный метод)
-        private void InitializeMockRooms()
-        {
-            // Демо-комнаты удалены
-            _mockRooms.Clear();
-        }
-
-        // Подключение к серверу (публичный метод)
-        public async Task<bool> ConnectAsync(string userId, string displayName)
-        {
-            await Task.Delay(200);
-            _isConnected = true;
-            _currentUserId = userId;
-            UserConnected?.Invoke(new UserConnectedMessage
-            {
-                UserId = userId,
-                DisplayName = displayName,
-                Type = "UserConnected"
-            });
-            return true;
-        }
-
-        // Отключение от сервера (публичный метод)
-        public async Task DisconnectAsync()
-        {
-            await Task.Delay(100);
-            _isConnected = false;
-            _currentUserId = null;
-            _currentRoomId = null;
-        }
-
-        // Получение списка комнат (публичный метод)
-        public async Task<List<Room>> GetRoomsAsync()
-        {
-            await Task.Delay(150);
-            
-            // Симулируем обновление списка комнат
-            var message = new RoomsListMessage
-            {
-                Rooms = _mockRooms.Where(r => r.Players < r.MaxPlayers).ToList(),
-                Type = "RoomsList"
-            };
-            RoomsListUpdated?.Invoke(message);
-            
-            return message.Rooms;
-        }
-
-        // Присоединение к комнате (публичный метод)
-        public async Task<bool> JoinRoomAsync(Room room, string? password = null)
-        {
-            await Task.Delay(300);
-            
-            _currentRoomId = room.Name;
-            var result = new JoinRoomMessage
-            {
-                RoomId = room.Name,
-                UserId = _currentUserId ?? "unknown",
-                Success = true,
-                Type = "JoinRoom"
-            };
-            JoinRoomResult?.Invoke(result);
-            
-            // Симулируем изменение состояния игры
-            GameStateChanged?.Invoke(new GameStateMessage
-            {
-                State = GameState.WaitingForOpponent,
-                RoomId = room.Name,
-                Type = "GameState"
-            });
-            
-            return true;
-        }
-
-        // Создание комнаты (публичный метод)
-        public async Task<bool> CreateRoomAsync(Room room, string? password = null)
-        {
-            await Task.Delay(300);
-            
-            _mockRooms.Add(room);
-            _currentRoomId = room.Name;
-            
-            var result = new JoinRoomMessage
-            {
-                RoomId = room.Name,
-                UserId = _currentUserId ?? "unknown",
-                Success = true,
-                Type = "JoinRoom"
-            };
-            JoinRoomResult?.Invoke(result);
-            
-            return true;
-        }
-
-        // Выход из комнаты (публичный метод)
-        public async Task LeaveRoomAsync()
-        {
-            await Task.Delay(100);
-            _currentRoomId = null;
-        }
-
-        // Отправка выстрела (публичный метод)
-        public async Task<bool> SendShootAsync(int row, int col, string roomId)
-        {
-            await Task.Delay(200);
-            
-            // Симулируем ответ сервера (случайный результат для демо)
-            var isHit = _random.Next(0, 3) == 0; // ~33% попаданий
-            var isSunk = isHit && _random.Next(0, 3) == 0; // ~11% потоплений
-            
-            var result = new ShootResultMessage
-            {
-                Row = row,
-                Col = col,
-                IsHit = isHit,
-                IsSunk = isSunk,
-                IsGameOver = false, // В реальной игре проверяется через подсчет кораблей
-                IsWinner = false,
-                Type = "ShootResult"
-            };
-            
-            ShootResultReceived?.Invoke(result);
-            
-            // Симулируем выстрел противника через некоторое время
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(1000);
-                if (_currentRoomId != null)
-                {
-                    OpponentShootReceived?.Invoke(new ShootMessage
-                    {
-                        Row = _random.Next(0, 10),
-                        Col = _random.Next(0, 10),
-                        RoomId = _currentRoomId,
-                        Type = "Shoot"
-                    });
-                }
-            });
-            
-            return true;
-        }
-
-        // Отправка расстановки кораблей (публичный метод)
-        public async Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId)
-        {
-            await Task.Delay(200);
-            
-            // Симулируем готовность к игре
-            GameStateChanged?.Invoke(new GameStateMessage
-            {
-                State = GameState.YourTurn,
-                RoomId = roomId,
-                Type = "GameState"
-            });
-            
-            return true;
-        }
+        public Task<bool> ConnectAsync(string userId, string displayName) => 
+            throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService to connect to the real server on port 5000.");
+        
+        public Task DisconnectAsync() => 
+            throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService.");
+        
+        public Task<List<Room>> GetRoomsAsync() => 
+            throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService to connect to the real server.");
+        
+        public Task<bool> JoinRoomAsync(Room room, string? password = null) => 
+            throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService.");
+        
+        public Task<bool> CreateRoomAsync(Room room, string? password = null) => 
+            throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService.");
+        
+        public Task LeaveRoomAsync() => 
+            throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService.");
+        
+        public Task<bool> SendShootAsync(int row, int col, string roomId) => 
+            throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService.");
+        
+        public Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId) => 
+            throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService.");
     }
 }

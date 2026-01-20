@@ -14,6 +14,17 @@ namespace BattleOfSea.ViewModels
         public ObservableCollection<Models.Room> Rooms { get; } = new ObservableCollection<Models.Room>();
         private readonly Services.INetworkService _networkService;
 
+        // Флаг подключения к серверу (публичное свойство)
+        public bool IsConnected => _networkService.IsConnected;
+
+        private string? _errorMessage;
+        // Сообщение об ошибке (публичное свойство)
+        public string? ErrorMessage
+        {
+            get => _errorMessage;
+            set { _errorMessage = value; OnPropertyChanged(); }
+        }
+
         private Models.Room? _selectedRoom;
         // Выбранная комната (публичное свойство)
         public Models.Room? SelectedRoom
@@ -27,8 +38,9 @@ namespace BattleOfSea.ViewModels
         public ICommand CreateRoomCommand { get; }
         public ICommand RefreshCommand { get; }
 
-        // Конструктор с использованием мок-сервиса (публичный)
-        public LobbyViewModel() : this(new Services.MockNetworkService()) { }
+        // Конструктор с использованием сетевого сервиса (публичный)
+        // ПРИМЕЧАНИЕ: Требует реального подключения к серверу
+        // public LobbyViewModel() : this(new Services.MockNetworkService()) { }
 
         // Конструктор с сетевым сервисом (публичный)
         public LobbyViewModel(Services.INetworkService networkService)
@@ -57,6 +69,7 @@ namespace BattleOfSea.ViewModels
         {
             try
             {
+                ErrorMessage = null;
                 var rooms = await _networkService.GetRoomsAsync();
                 Rooms.Clear();
                 foreach (var room in rooms)
@@ -69,6 +82,7 @@ namespace BattleOfSea.ViewModels
             }
             catch (System.Exception ex)
             {
+                ErrorMessage = $"Ошибка загрузки комнат: {ex.Message}";
                 Console.WriteLine($"Error loading rooms: {ex.Message}");
             }
         }
@@ -89,24 +103,40 @@ namespace BattleOfSea.ViewModels
         // Создание комнаты (приватный метод)
         private async System.Threading.Tasks.Task CreateRoomAsync()
         {
-            // Открываем окно создания комнаты
-            var createWindow = new Views.CreateRoomWindow();
-            var parent = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow : null;
-            
-            if (parent != null)
+            try
             {
-                var result = await createWindow.ShowDialog<Models.Room?>(parent);
-                if (result != null)
+                ErrorMessage = null;
+                // Открываем окно создания комнаты
+                var createWindow = new Views.CreateRoomWindow();
+                var createVm = new CreateRoomViewModel();
+                createWindow.DataContext = createVm;
+                
+                var parent = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    ? desktop.MainWindow : null;
+                
+                if (parent != null)
                 {
-                    var success = await _networkService.CreateRoomAsync(result);
-                    if (success)
+                    var result = await createWindow.ShowDialog<Models.Room?>(parent);
+                    if (result != null)
                     {
-                        AddRoom(result);
-                        // Автоматически присоединяемся к созданной комнате
-                        await JoinRoomAsync(result);
+                        var success = await _networkService.CreateRoomAsync(result);
+                        if (success)
+                        {
+                            // Сервер отправит обновленный список комнат через RoomsListUpdated событие
+                            // Автоматически присоединяемся к созданной комнате
+                            await JoinRoomAsync(result);
+                        }
+                        else
+                        {
+                            ErrorMessage = "Не удалось создать комнату";
+                        }
                     }
                 }
+            }
+            catch (System.Exception ex)
+            {
+                ErrorMessage = $"Ошибка создания комнаты: {ex.Message}";
+                Console.WriteLine($"Create room error: {ex.Message}");
             }
         }
 
@@ -125,32 +155,19 @@ namespace BattleOfSea.ViewModels
         // Событие запроса присоединения к комнате (публичное событие)
         public event Action<Models.Room?>? JoinRequested;
 
-        // Добавление комнаты в список (публичный метод)
-        public void AddRoom(Models.Room room)
-        {
-            if (room != null && room.Players < room.MaxPlayers)
-            {
-                Rooms.Add(room);
-                Console.WriteLine($"Room created: {room.Name} ({room.Players}/{room.MaxPlayers})");
-            }
-            else
-            {
-                Console.WriteLine($"Room not added (full or invalid): {room?.Name}");
-            }
-        }
-
         // Присоединение к комнате (приватный метод)
         private async System.Threading.Tasks.Task JoinRoomAsync(Models.Room? room)
         {
             if (room == null) return;
 
-            Console.WriteLine($"Join requested: {room.Name}");
             try
             {
+                ErrorMessage = null;
+                Console.WriteLine($"Join requested: {room.Name}");
                 var ok = await _networkService.JoinRoomAsync(room);
                 if (ok)
                 {
-                    Console.WriteLine($"Joined room (mock): {room.Name}");
+                    Console.WriteLine($"Joined room: {room.Name}");
                     // Небольшая задержка для гарантии срабатывания события после завершения асинхронной операции
                     await System.Threading.Tasks.Task.Delay(10);
                     // Всегда вызываем событие с комнатой, которая была передана
@@ -158,11 +175,13 @@ namespace BattleOfSea.ViewModels
                 }
                 else
                 {
+                    ErrorMessage = $"Не удалось присоединиться к комнате {room.Name}";
                     Console.WriteLine($"Failed to join room: {room.Name}");
                 }
             }
             catch (System.Exception ex)
             {
+                ErrorMessage = $"Ошибка присоединения: {ex.Message}";
                 Console.WriteLine($"Join error: {ex.Message}");
             }
         }

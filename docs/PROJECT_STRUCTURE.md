@@ -45,10 +45,12 @@
 
 Папка Services — Сеть и аутх
 - `INetworkService.cs` — Интерфейс сети
-- `NetworkService.cs` — Реал WS
-- `MockNetworkService.cs` — Мок сети
-- `IAuthService.cs` — Интерфейс аутх
-- `MockAuthService.cs` — Мок аутх
+- `NetworkService.cs` — Реальный WebSocket клиент (требует сервера на порту 5000)
+- `GameServerClient.cs` — Реальный TCP клиент для игрового сервера (требует сервера на порту 5000)
+- `SimpleChatClient.cs` — Реальный TCP клиент для чата
+- `MockNetworkService.cs` — DEPRECATED: выбрасывает исключения (все операции требуют реального сервера)
+- `IAuthService.cs` — Интерфейс аутентификации
+- `MockAuthService.cs` — Мок-аутентификация
 
 Папка Controls — Повторно используемые элементы
 - `TimerControl.axaml` — Таймер визуал

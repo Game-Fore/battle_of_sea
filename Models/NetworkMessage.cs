@@ -88,6 +88,8 @@ namespace BattleOfSea.Models
         public string UserId { get; set; } = string.Empty;
         // Успешно ли присоединение
         public bool Success { get; set; }
+        // Сообщение об ошибке или статус
+        public string Message { get; set; } = string.Empty;
     }
 
     // Сообщение о создании комнаты

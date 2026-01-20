@@ -10,7 +10,7 @@ namespace BattleOfSea.Views
         public LobbyView()
         {
             InitializeComponent();
-            DataContext = new ViewModels.LobbyViewModel();
+            // DataContext устанавливается MainWindow после создания LobbyView
 
             var lb = this.FindControl<ListBox>("RoomsList");
             if (lb != null)
@@ -38,34 +38,16 @@ namespace BattleOfSea.Views
         }
 
         // Обработчик клика "Создать комнату" (приватный метод)
-        private async void CreateRoom_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        private void CreateRoom_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            var win = new CreateRoomWindow();
-            var vm = new ViewModels.CreateRoomViewModel();
-            win.DataContext = vm;
-
-            var parent = this.VisualRoot as Avalonia.Controls.Window;
-            if (parent == null)
+            if (DataContext is ViewModels.LobbyViewModel lvm)
             {
-                // Если не нашли родительское окно (редко), показываем немодальное окно как запасной вариант
-                win.Show();
-                return;
+                // Вызываем CreateRoomCommand который требует сервера
+                lvm.CreateRoomCommand.Execute(null);
             }
-
-            var result = await win.ShowDialog<Models.Room?>(parent);
-            if (result != null)
+            else
             {
-                if (DataContext is ViewModels.LobbyViewModel lvm)
-                {
-                    // Комната уже создана в CreateRoomWindow, просто добавляем и присоединяемся
-                    lvm.AddRoom(result);
-                    // Автоматическое присоединение к созданной комнате - вызовет JoinRequested и откроет игру
-                    lvm.JoinCommand.Execute(result);
-                }
-                else
-                {
-                    Console.WriteLine($"CreateRoom: Lobby DataContext not found");
-                }
+                Console.WriteLine($"CreateRoom: Lobby DataContext not found");
             }
         }
     }

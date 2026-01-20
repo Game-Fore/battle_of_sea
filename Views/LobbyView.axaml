@@ -3,12 +3,16 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BattleOfSea.Views.LobbyView">
-  <Grid ColumnDefinitions="3*,2*" RowDefinitions="Auto,*" Margin="10">
+  <Grid ColumnDefinitions="3*,2*" RowDefinitions="Auto,Auto,*" Margin="10">
     <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
       <TextBlock Text="Лобби" FontSize="20" Margin="4" />
     </StackPanel>
 
-    <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Rooms}" SelectedItem="{Binding SelectedRoom}" Name="RoomsList">
+    <!-- Сообщение об ошибке -->
+    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding ErrorMessage}" Foreground="Red" FontSize="12" 
+               Margin="10,4" TextWrapping="Wrap" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+    <ListBox Grid.Row="2" Grid.Column="0" ItemsSource="{Binding Rooms}" SelectedItem="{Binding SelectedRoom}" Name="RoomsList">
       <ListBox.ItemTemplate>
         <DataTemplate>
           <Border Padding="6" Margin="4" BorderBrush="#cbd5e1" BorderThickness="1" Background="#ffffff" CornerRadius="8">
@@ -23,7 +27,7 @@
 
               <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
                 <TextBlock Classes="badge" Text="{Binding PlayersDisplay}" VerticalAlignment="Center" />
-                <Button Content="Присоединиться" Command="{Binding DataContext.JoinCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding IsJoinAllowed}" 
+                <Button Content="Присоединиться" Command="{Binding DataContext.JoinCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" 
                         HorizontalContentAlignment="Center" />
               </StackPanel>
             </Grid>
@@ -32,7 +36,7 @@
       </ListBox.ItemTemplate>
     </ListBox>
 
-    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8" VerticalAlignment="Top" Spacing="8">
+    <StackPanel Grid.Row="2" Grid.Column="1" Margin="8" VerticalAlignment="Top" Spacing="8">
       <Button Content="Создать комнату" Click="CreateRoom_Click" 
               Width="200" FontSize="14" HorizontalAlignment="Stretch" 
               HorizontalContentAlignment="Center" />

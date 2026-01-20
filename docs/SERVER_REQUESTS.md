@@ -1,6 +1,6 @@
 SERVER REQUESTS — запросы к серверу с кнопок
 
-Сервер: ws://localhost:5500
+Сервер: ws://localhost:5000
 
 Кнопки и соответствующие запросы:
 
@@ -94,5 +94,5 @@ SERVER REQUESTS — запросы к серверу с кнопок
     "roomId": "R1"
   }
 
-ПРИМЕЧАНИЕ: Порт сервера установлен на 5500. Для изменения используйте конструктор NetworkService:
-  var service = new NetworkService("localhost", 5500);
+ПРИМЕЧАНИЕ: Порт сервера установлен на 5000. Для изменения используйте конструктор NetworkService:
+  var service = new NetworkService("localhost", 5000);
