@@ -1,0 +1,278 @@
+# ----------------------------------------
+# Полный тест TCP JSON для battle_of_sea
+# ----------------------------------------
+
+function Connect-Player($name) {
+    $client = New-Object System.Net.Sockets.TcpClient("127.0.0.1",5000)
+    $stream = $client.GetStream()
+    $writer = New-Object System.IO.StreamWriter($stream,[System.Text.Encoding]::UTF8)
+    $writer.AutoFlush = $true
+    $reader = New-Object System.IO.StreamReader($stream,[System.Text.Encoding]::UTF8)
+
+    # Подключение
+    $json = '{ "type":"connect", "payload":{ "playerName":"'+$name+'" } }'
+    Write-Host "$name connecting: $json"
+    $writer.Write("$json`n")
+    Write-Host "Server response: $($reader.ReadLine())"
+
+    return @{Client=$client; Writer=$writer; Reader=$reader; Name=$name}
+}
+
+# -----------------------
+# Подключаем игроков
+# -----------------------
+$player1 = Connect-Player "Alex"
+$player2 = Connect-Player "Bob"
+
+Start-Sleep -Milliseconds 500
+
+Write-Host "Test ships placed (серверная доска) — 3 клетки на каждого"
+
+# -----------------------
+# Функция выстрела
+# -----------------------
+function Shoot($shooter, $target, $x, $y) {
+    $json = '{ "type":"shoot", "payload":{ "x":'+$x+', "y":'+$y+' } }'
+    $shooter.Writer.Write("$json`n")
+
+    $result = $shooter.Reader.ReadLine()
+    Write-Host "$($shooter.Name) shot: $result"
+
+    $opponentResult = $target.Reader.ReadLine()
+    Write-Host "$($target.Name) sees opponent shot: $opponentResult"
+
+    # Возвращаем флаг _over
+    if ($result -match '"game_over"') { return $true }
+    return $false
+}
+
+# -----------------------
+# Генератор случайных координат для выстрелов
+# -----------------------
+$usedCoordinates = @{}
+function Get-RandomCoordinates {
+    do {
+        $x = Get-Random -Minimum 0 -Maximum 10
+        $y = Get-Random -Minimum 0 -Maximum 10
+    } while ($usedCoordinates["$x,$y"])
+    $usedCoordinates["$x,$y"] = $true
+    return @($x,$y)
+}
+
+# -----------------------
+# Цикл игры
+# -----------------------
+$gameOver = $false
+$currentShooter = $player1
+$currentTarget  = $player2
+
+while (-not $gameOver) {
+    $coords = Get-RandomCoordinates
+    $x = $coords[0]
+    $y = $coords[1]
+
+    $gameOver = Shoot $currentShooter $currentTarget $x $y
+
+    # Меняем ход
+    $temp = $currentShooter
+    $currentShooter = $currentTarget
+    $currentTarget = $temp
+
+    Start-Sleep -Milliseconds 200
+}
+
+# -----------------------
+# Закрываем соединения
+# -----------------------
+$player1.Writer.Close(); $player1.Reader.Close(); $player1.Client.Close()
+$player2.Writer.Close(); $player2.Reader.Close(); $player2.Client.Close()
+Write-Host "Connections closed"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write-Host "=== CONNECT ALEX ==="
+
+$client = New-Object System.Net.Sockets.TcpClient("localhost", 5000)
+$stream = $client.GetStream()
+$reader = New-Object System.IO.StreamReader($stream)
+$writer = New-Object System.IO.StreamWriter($stream)
+$writer.AutoFlush = $true
+
+$writer.WriteLine('{ "type":"connect", "payload":{ "playerName":"Alex" } }')
+$response = $reader.ReadLine()
+Write-Host "Server:" $response
+
+$playerId = (ConvertFrom-Json $response).Payload.playerId
+Write-Host "Alex playerId:" $playerId
+
+Start-Sleep -Seconds 1
+
+Write-Host "`n=== DISCONNECT ALEX ==="
+$client.Close()
+
+Start-Sleep -Seconds 2
+
+Write-Host "`n=== RECONNECT ALEX ==="
+
+$client2 = New-Object System.Net.Sockets.TcpClient("localhost", 5000)
+$stream2 = $client2.GetStream()
+$reader2 = New-Object System.IO.StreamReader($stream2)
+$writer2 = New-Object System.IO.StreamWriter($stream2)
+$writer2.AutoFlush = $true
+
+$reconnectJson = "{ `"type`":`"reconnect`", `"payload`":{ `"playerId`":`"$playerId`" } }"
+$writer2.WriteLine($reconnectJson)
+
+$response2 = $reader2.ReadLine()
+Write-Host "Server:" $response2
+
+Write-Host "`n=== DONE ==="
+
+$client2.Close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# === FULL BATTLE TEST SCRIPT ===
+
+$serverHost = "127.0.0.1"
+$serverPort = 5000
+
+function Connect-Player($name) {
+    $tcp = New-Object System.Net.Sockets.TcpClient
+    $tcp.Connect($serverHost, $serverPort)
+    $stream = $tcp.GetStream()
+    $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
+    $writer = New-Object System.IO.StreamWriter($stream, [System.Text.Encoding]::UTF8)
+    $writer.AutoFlush = $true
+
+    # Отправляем connect
+    $msg = @{ type="connect"; payload=@{ playerName=$name } } | ConvertTo-Json -Compress
+    $writer.WriteLine($msg)
+
+    $response = $reader.ReadLine()
+    $playerId = ($response | ConvertFrom-Json).Payload.playerId
+    Write-Host "$name connected -> $response"
+
+    return [PSCustomObject]@{
+        Name = $name
+        Tcp = $tcp
+        Reader = $reader
+        Writer = $writer
+        Id = $playerId
+    }
+}
+
+function Shoot($shooter, $x, $y) {
+    $msg = @{ type="shoot"; payload=@{ x=$x; y=$y } } | ConvertTo-Json -Compress
+    $shooter.Writer.WriteLine($msg)
+    $response = $shooter.Reader.ReadLine()
+    Write-Host "$($shooter.Name) shoots [$x,$y]"
+    Write-Host "$($shooter.Name) result -> $response"
+}
+
+# === Подключаем игроков ===
+$player1 = Connect-Player "Alex"
+$player2 = Connect-Player "Bob"
+
+# === Ручная расстановка кораблей на сервере ===
+# Для теста на сервере должно быть реализовано: Board.PlaceShip(x, y, size, horizontal)
+# Предположим, что сервер уже расставляет 1-4 палубные корабли
+
+Write-Host "`n=== SHOOTING PHASE ===`n"
+
+# Сценарий стрельбы
+# Alex стреляет по пустой клетке
+Shoot $player1 9 9
+# Bob стреляет по пустой клетке
+Shoot $player2 9 8
+
+# Alex стреляет по клетке с 4-палубным кораблём
+Shoot $player1 0 0
+Shoot $player1 0 1
+Shoot $player1 0 2
+Shoot $player1 0 3
+
+# Bob стреляет по клеткам, чтобы показать, что ход передаётся корректно
+Shoot $player2 5 5
+Shoot $player2 6 6
+
+# После последнего попадания Alex должен получить "game_over"
+
+Write-Host "`n=== TEST FINISHED ===`n"
+
+# Закрываем соединения
+$player1.Tcp.Close()
+$player2.Tcp.Close()
