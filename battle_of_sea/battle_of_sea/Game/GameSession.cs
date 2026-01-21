@@ -1,4 +1,5 @@
 ﻿using battle_of_sea.Protocol;
+using battle_of_sea.Network;
 using System;
 using System.Timers;
 
@@ -14,6 +15,9 @@ namespace battle_of_sea.Game
 
         private readonly System.Timers.Timer _turnTimer;
         private const int TurnTimeMs = 30_000; // 30 секунд
+        
+        // Событие завершения игры
+        public event Action<GameSession>? GameFinished;
         
         public GameSession(Player p1, Player p2)
         {
@@ -54,20 +58,21 @@ namespace battle_of_sea.Game
             Console.WriteLine($"Turn timeout: {timedOutPlayer.Name}");
 
             // уведомляем обоих
-            await timedOutPlayer.Connection.SendAsync(
+            await SendMessageToPlayer(timedOutPlayer, 
                 new ServerMessage { Type = "turn_timeout" });
 
-            await opponent.Connection.SendAsync(
+            await SendMessageToPlayer(opponent, 
                 new ServerMessage { Type = "your_turn" });
 
             SwitchTurn();
         }
+
         public async Task ProcessShotAsync(Player shooter, int x, int y)
         {
             // Проверка хода (дополнительная защита)
             if (shooter.Id != CurrentTurnPlayerId)
             {
-                await shooter.Connection.SendAsync(new ServerMessage
+                await SendMessageToPlayer(shooter, new ServerMessage
                 {
                     Type = "error",
                     Payload = new { message = "Not your turn" }
@@ -81,16 +86,16 @@ namespace battle_of_sea.Game
 
 
             // Результат стреляющему
-            await shooter.Connection.SendAsync(new ServerMessage
+            await SendMessageToPlayer(shooter, new ServerMessage
             {
-                Type = "shoot_result",
+                Type = "ShootResult",
                 Payload = new { x, y, result = result.ToString() }
             });
 
             // Результат противнику
-            await opponent.Connection.SendAsync(new ServerMessage
+            await SendMessageToPlayer(opponent, new ServerMessage
             {
-                Type = "opponent_shot",
+                Type = "OpponentShoot",
                 Payload = new { x, y, result = result.ToString() }
             });
 
@@ -100,27 +105,48 @@ namespace battle_of_sea.Game
                 _turnTimer.Stop();
                 
 
-                await shooter.Connection.SendAsync(new ServerMessage
+                await SendMessageToPlayer(shooter, new ServerMessage
                 {
-                    Type = "game_over",
+                    Type = "GameOver",
                     Payload = new { winner = shooter.Name }
                 });
 
-                await opponent.Connection.SendAsync(new ServerMessage
+                await SendMessageToPlayer(opponent, new ServerMessage
                 {
-                    Type = "game_over",
+                    Type = "GameOver",
                     Payload = new { winner = shooter.Name }
                 });
                 IsFinished = true;
+                
+                // Вызываем событие завершения игры
+                GameFinished?.Invoke(this);
                 return;
             }
 
             // Передаём ход и перезапускаем таймер
             SwitchTurn();
 
-            await GetCurrentPlayer().Connection.SendAsync(
-                new ServerMessage { Type = "your_turn" });
+            await SendMessageToPlayer(GetCurrentPlayer(), 
+                new ServerMessage { Type = "YourTurn" });
         }
 
+        private async Task SendMessageToPlayer(Player player, ServerMessage message)
+        {
+            try
+            {
+                if (player.Connection is WebSocketConnection wsConnection)
+                {
+                    await wsConnection.SendAsync(message);
+                }
+                else if (player.Connection is ClientConnection tcpConnection)
+                {
+                    await tcpConnection.SendAsync(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending message to player {player.Name}: {ex.Message}");
+            }
+        }
     }
 }

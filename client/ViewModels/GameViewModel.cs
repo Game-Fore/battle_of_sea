@@ -122,6 +122,7 @@ namespace BattleOfSea.ViewModels
         private readonly Services.INetworkService? _networkService;
         private readonly Services.GameServerClient? _gameServerClient;
         private string? _roomId;
+        private bool _isDemoMode = false; // Флаг режима демонстрации
 
         // Конструктор модели представления игры (публичный)
         public GameViewModel(Models.Room? room = null, Services.INetworkService? networkService = null)
@@ -129,6 +130,13 @@ namespace BattleOfSea.ViewModels
             _networkService = networkService;
             RoomName = room?.Name;
             _roomId = room?.Name;
+
+            // Проверяем доступность сервера
+            if (_networkService != null && !_networkService.IsConnected)
+            {
+                _isDemoMode = true;
+                Console.WriteLine("[GameVM] Demo mode enabled - server is not available");
+            }
 
             // Инициализируем клиент игрового сервера
             _gameServerClient = new Services.GameServerClient("localhost", 5000);
@@ -248,6 +256,13 @@ namespace BattleOfSea.ViewModels
             // Проверяем, что сейчас наш ход
             if (State != GameState.YourTurn) return;
 
+            // В режиме демонстрации показываем ошибку
+            if (_isDemoMode)
+            {
+                await ShowDemoWarningDialog();
+                return;
+            }
+
             // Отправляем выстрел через игровой сервер, если есть подключение
             if (_gameServerClient != null && _roomId != null && _gameServerClient.IsConnected)
             {
@@ -266,6 +281,7 @@ namespace BattleOfSea.ViewModels
 
             // Если нет подключения к серверу - ошибка
             Console.WriteLine("Not connected to game server");
+            await ShowDemoWarningDialog();
         }
 
         // Обработать таймаут (публичный метод)
@@ -528,6 +544,31 @@ namespace BattleOfSea.ViewModels
             {
                 Console.WriteLine($"Error sending ship placement: {ex.Message}");
             }
+        }
+
+        // Показать диалог демо-режима (приватный метод)
+        private async System.Threading.Tasks.Task ShowDemoWarningDialog()
+        {
+            await System.Threading.Tasks.Task.Delay(500);
+            Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+            {
+                var parent = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    ? desktop.MainWindow : null;
+                if (parent != null)
+                {
+                    var dialog = new Views.ConfirmDialog(
+                        "Сервер недоступен",
+                        "❌ Сервер не работает.\n\nДля игры необходимо подключение к серверу.\n\nВы можете разместить корабли, но не сможете играть.\n\nВернуться в лобби?",
+                        "Вернуться в лобби",
+                        "Остаться"
+                    );
+                    var result = await dialog.ShowDialog<bool>(parent);
+                    if (result)
+                    {
+                        RequestExit();
+                    }
+                }
+            });
         }
 
         // Событие изменения свойства (публичное событие)

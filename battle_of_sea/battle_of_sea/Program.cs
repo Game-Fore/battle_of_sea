@@ -4,9 +4,9 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        Console.WriteLine("Starting server...");
+        Console.WriteLine("Starting WebSocket server...");
 
-        var server = new ServerListener(5000);
+        var server = new WebSocketListener(5555);
         await server.StartAsync();
     }
 }

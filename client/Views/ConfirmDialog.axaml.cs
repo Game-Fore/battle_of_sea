@@ -29,6 +29,20 @@ namespace BattleOfSea.Views
             DataContext = new ConfirmDialogViewModel();
         }
 
+        // Конструктор диалога с параметрами (публичный)
+        public ConfirmDialog(string title, string message, string yesText = "Да", string? noText = "Нет")
+        {
+            InitializeComponent();
+            Title = title;
+            var vm = new ConfirmDialogViewModel 
+            { 
+                Message = message,
+                YesButtonText = yesText,
+                NoButtonText = noText ?? ""
+            };
+            DataContext = vm;
+        }
+
         // Обработчик клика "Да" (приватный метод)
         private void Yes_Click(object? sender, RoutedEventArgs e)
         {
@@ -49,5 +63,9 @@ namespace BattleOfSea.Views
     {
         // Сообщение диалога (публичное свойство)
         public string Message { get; set; } = "Вы уверены?";
+        // Текст кнопки "Да" (публичное свойство)
+        public string YesButtonText { get; set; } = "Да";
+        // Текст кнопки "Нет" (публичное свойство)
+        public string NoButtonText { get; set; } = "Нет";
     }
 }

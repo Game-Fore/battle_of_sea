@@ -4,6 +4,8 @@ namespace BattleOfSea.Models
     // Класс игровой комнаты
     public class Room
     {
+        // ID комнаты
+        public string Id { get; set; } = string.Empty;
         // Название комнаты
         public string Name { get; }
         // Текущее количество игроков

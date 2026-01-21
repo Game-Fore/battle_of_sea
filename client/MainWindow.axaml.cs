@@ -1,5 +1,7 @@
 // Главное окно
 using Avalonia.Controls;
+using System;
+using System.Threading.Tasks;
 
 namespace BattleOfSea
 {
@@ -14,8 +16,8 @@ namespace BattleOfSea
         {
             InitializeComponent();
 
-            // Инициализируем сетевой сервис - требует реального подключения к серверу (ws://localhost:5000)
-            _networkService = new Services.NetworkService("localhost", 5000);
+            // Инициализируем сетевой сервис - требует реального подключения к серверу (ws://localhost:5555)
+            _networkService = new Services.NetworkService("localhost", 5555);
 
             // Кэшируем элементы управления и подписываемся на запросы присоединения к комнатам
             _mainContent = this.FindControl<ContentControl>("MainContent");
@@ -32,6 +34,59 @@ namespace BattleOfSea
             {
                 lvm.JoinRequested += OnRoomJoinRequested;
             }
+
+            // Подключаемся к серверу при загрузке окна
+            this.Loaded += (s, e) => ConnectToServerAsync();
+        }
+
+        private async void ConnectToServerAsync()
+        {
+            try
+            {
+                string userId = $"player_{Guid.NewGuid().ToString().Substring(0, 8)}";
+                string displayName = "Player";
+
+                Console.WriteLine($"[MainWindow] Connecting to server with userId: {userId}");
+                bool connected = await _networkService.ConnectAsync(userId, displayName);
+
+                if (connected)
+                {
+                    Console.WriteLine($"[MainWindow] ✅ Connected to server!");
+                }
+                else
+                {
+                    Console.WriteLine($"[MainWindow] ❌ Failed to connect to server");
+                    ShowConnectionWarning();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainWindow] ❌ Connection error: {ex.Message}");
+                ShowConnectionWarning();
+            }
+        }
+
+        // Показать предупреждение о подключении (приватный метод)
+        private void ShowConnectionWarning()
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+            {
+                try
+                {
+                    var dialog = new Views.ConfirmDialog(
+                        "Ошибка подключения",
+                        "⚠️ Не удалось подключиться к серверу.\n\nКлиент будет работать в режиме демонстрации.\nВы сможете разместить корабли и просмотреть демонстрационные комнаты, но не сможете играть онлайн.\n\nУбедитесь, что сервер запущен на порту 5555.",
+                        "Продолжить",
+                        null
+                    );
+                    await dialog.ShowDialog(this);
+                    Console.WriteLine("[MainWindow] User acknowledged connection warning");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MainWindow] Error showing warning dialog: {ex.Message}");
+                }
+            });
         }
 
         // Обработчик запроса присоединения к комнате (приватный метод)

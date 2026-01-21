@@ -13,9 +13,13 @@ namespace BattleOfSea.ViewModels
         // Список доступных комнат (публичное свойство)
         public ObservableCollection<Models.Room> Rooms { get; } = new ObservableCollection<Models.Room>();
         private readonly Services.INetworkService _networkService;
+        private bool _demoMode = false; // Флаг режима демонстрации
 
         // Флаг подключения к серверу (публичное свойство)
         public bool IsConnected => _networkService.IsConnected;
+
+        // Флаг режима демонстрации (публичное свойство)
+        public bool IsDemoMode => _demoMode;
 
         private string? _errorMessage;
         // Сообщение об ошибке (публичное свойство)
@@ -53,6 +57,9 @@ namespace BattleOfSea.ViewModels
 
             // Загружаем комнаты с сервера
             _ = LoadRoomsAsync();
+            
+            // Периодически обновляем список комнат каждые 3 секунды
+            StartPeriodicRoomsUpdate();
 
             // Инициализация команд
             JoinCommand = new Utils.RelayCommand(async o => {
@@ -70,6 +77,18 @@ namespace BattleOfSea.ViewModels
             try
             {
                 ErrorMessage = null;
+                
+                // Проверяем подключение к серверу
+                if (!_networkService.IsConnected)
+                {
+                    _demoMode = true;
+                    LoadDemoRooms();
+                    ErrorMessage = "⚠️ Сервер недоступен. Показаны демонстрационные комнаты.";
+                    Console.WriteLine("[Lobby] Server is not available, loading demo rooms");
+                    return;
+                }
+
+                _demoMode = false;
                 var rooms = await _networkService.GetRoomsAsync();
                 Rooms.Clear();
                 foreach (var room in rooms)
@@ -82,22 +101,50 @@ namespace BattleOfSea.ViewModels
             }
             catch (System.Exception ex)
             {
-                ErrorMessage = $"Ошибка загрузки комнат: {ex.Message}";
-                Console.WriteLine($"Error loading rooms: {ex.Message}");
+                // При ошибке загружаем демонстрационные комнаты
+                _demoMode = true;
+                LoadDemoRooms();
+                ErrorMessage = $"⚠️ Ошибка подключения: {ex.Message}. Используется демо-режим.";
+                Console.WriteLine($"[Lobby] Error loading rooms: {ex.Message}");
             }
+        }
+
+        // Загрузка демонстрационных комнат (приватный метод)
+        private void LoadDemoRooms()
+        {
+            Rooms.Clear();
+            Rooms.Add(new Models.Room("Демо-комната 1", 1, 2));
+            Rooms.Add(new Models.Room("Демо-комната 2", 2, 2));
+            Console.WriteLine("[Lobby] Demo rooms loaded");
         }
 
         // Обработчик обновления списка комнат (приватный метод)
         private void OnRoomsListUpdated(Models.RoomsListMessage message)
         {
+            Console.WriteLine($"[Lobby] OnRoomsListUpdated: received {message.Rooms.Count} rooms");
             Rooms.Clear();
             foreach (var room in message.Rooms)
             {
-                if (room.Players < room.MaxPlayers)
-                {
-                    Rooms.Add(room);
-                }
+                // Показываем все комнаты, даже если они полные
+                Rooms.Add(room);
+                Console.WriteLine($"[Lobby] Added room: {room.Name} ({room.Players}/{room.MaxPlayers})");
             }
+            ErrorMessage = null;
+        }
+        
+        // Периодическое обновление списка комнат (приватный метод)
+        private void StartPeriodicRoomsUpdate()
+        {
+            var timer = new System.Timers.Timer(3000);
+            timer.Elapsed += async (s, e) =>
+            {
+                if (_networkService.IsConnected && !_demoMode)
+                {
+                    await LoadRoomsAsync();
+                }
+            };
+            timer.AutoReset = true;
+            timer.Start();
         }
 
         // Создание комнаты (приватный метод)
@@ -105,7 +152,15 @@ namespace BattleOfSea.ViewModels
         {
             try
             {
+                if (!_networkService.IsConnected)
+                {
+                    ErrorMessage = "❌ Сервер недоступен. Нельзя создать новую комнату в режиме демонстрации.";
+                    Console.WriteLine("[CreateRoom] Cannot create room in demo mode");
+                    return;
+                }
+
                 ErrorMessage = null;
+                Console.WriteLine("[CreateRoom] Opening create room dialog...");
                 // Открываем окно создания комнаты
                 var createWindow = new Views.CreateRoomWindow();
                 var createVm = new CreateRoomViewModel();
@@ -119,17 +174,24 @@ namespace BattleOfSea.ViewModels
                     var result = await createWindow.ShowDialog<Models.Room?>(parent);
                     if (result != null)
                     {
+                        Console.WriteLine($"[CreateRoom] Creating room: {result.Name}");
                         var success = await _networkService.CreateRoomAsync(result);
                         if (success)
                         {
+                            Console.WriteLine($"[CreateRoom] ✅ Room created successfully");
                             // Сервер отправит обновленный список комнат через RoomsListUpdated событие
                             // Автоматически присоединяемся к созданной комнате
                             await JoinRoomAsync(result);
                         }
                         else
                         {
+                            Console.WriteLine($"[CreateRoom] ❌ Failed to create room");
                             ErrorMessage = "Не удалось создать комнату";
                         }
+                    }
+                    else
+                    {
+                        Console.WriteLine("[CreateRoom] Dialog canceled");
                     }
                 }
             }
@@ -163,6 +225,15 @@ namespace BattleOfSea.ViewModels
             try
             {
                 ErrorMessage = null;
+                
+                // В режиме демонстрации просто переходим в комнату
+                if (_demoMode)
+                {
+                    Console.WriteLine($"[Lobby] Demo mode: joining room {room.Name}");
+                    JoinRequested?.Invoke(room);
+                    return;
+                }
+
                 Console.WriteLine($"Join requested: {room.Name}");
                 var ok = await _networkService.JoinRoomAsync(room);
                 if (ok)

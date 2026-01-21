@@ -42,7 +42,7 @@ namespace BattleOfSea.Services
         public event Action<string>? ConnectionError;
 
         // Конструктор сетевого сервиса (публичный)
-        public NetworkService(string serverHost = "localhost", int serverPort = 5000)
+        public NetworkService(string serverHost = "localhost", int serverPort = 5555)
         {
             _serverUrl = $"ws://{serverHost}:{serverPort}";
             _isConnected = false;
@@ -53,13 +53,18 @@ namespace BattleOfSea.Services
         {
             try
             {
+                Console.WriteLine($"[NetworkService] Attempting to connect to {_serverUrl}");
+                
                 _webSocket = new ClientWebSocket();
                 _cancellationTokenSource = new CancellationTokenSource();
                 
+                Console.WriteLine($"[NetworkService] Connecting to WebSocket...");
                 await _webSocket.ConnectAsync(
-                    new Uri($"{_serverUrl}/connect"), 
+                    new Uri(_serverUrl), 
                     _cancellationTokenSource.Token
                 );
+                
+                Console.WriteLine($"[NetworkService] ✅ WebSocket connected! State: {_webSocket.State}");
 
                 _isConnected = true;
                 _currentUserId = userId;
@@ -72,7 +77,9 @@ namespace BattleOfSea.Services
                     displayName = displayName
                 };
 
+                Console.WriteLine($"[NetworkService] Sending Connect message...");
                 await SendMessageAsync(connectMessage);
+                Console.WriteLine($"[NetworkService] Connect message sent");
 
                 // Запускаем слушатель сообщений
                 _ = ListenForMessagesAsync();
@@ -84,12 +91,16 @@ namespace BattleOfSea.Services
                     Type = "UserConnected"
                 });
 
-
+                Console.WriteLine($"[NetworkService] Connected successfully!");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Connection error: {ex.Message}");
+                Console.WriteLine($"[NetworkService] ❌ Connection error: {ex.Message}");
+                Console.WriteLine($"[NetworkService] Exception type: {ex.GetType().Name}");
+                if (ex.InnerException != null)
+                    Console.WriteLine($"[NetworkService] Inner exception: {ex.InnerException.Message}");
+                
                 ConnectionError?.Invoke($"Failed to connect: {ex.Message}");
                 _isConnected = false;
                 return false;
@@ -291,12 +302,15 @@ namespace BattleOfSea.Services
         // Отправить сообщение на сервер (приватный метод)
         private async Task SendMessageAsync(object message)
         {
+            Console.WriteLine($"[SendMessage] WebSocket state: {_webSocket?.State}");
             if (_webSocket?.State != WebSocketState.Open)
             {
+                Console.WriteLine($"[SendMessage] ❌ WebSocket is not connected! State: {_webSocket?.State}");
                 throw new InvalidOperationException("WebSocket is not connected");
             }
 
             var json = JsonSerializer.Serialize(message);
+            Console.WriteLine($"[SendMessage] Sending: {json}");
             var buffer = Encoding.UTF8.GetBytes(json);
 
             await _webSocket.SendAsync(
@@ -305,7 +319,8 @@ namespace BattleOfSea.Services
                 true,
                 CancellationToken.None
             );
-
+            
+            Console.WriteLine($"[SendMessage] ✅ Message sent");
 
         }
 
@@ -358,30 +373,56 @@ namespace BattleOfSea.Services
                 using (var doc = JsonDocument.Parse(json))
                 {
                     var root = doc.RootElement;
-                    var type = root.GetProperty("type").GetString();
-
-                    switch (type)
+                    
+                    // Пытаемся получить "type" или "Type" (case-insensitive)
+                    string? type = null;
+                    if (root.TryGetProperty("type", out var typeElem))
                     {
-                        case "RoomsList":
+                        type = typeElem.GetString();
+                    }
+                    else if (root.TryGetProperty("Type", out typeElem))
+                    {
+                        type = typeElem.GetString();
+                    }
+                    
+                    if (string.IsNullOrEmpty(type))
+                    {
+                        Console.WriteLine($"[HandleServerMessage] ❌ Message has no 'type' field: {json.Substring(0, Math.Min(100, json.Length))}");
+                        return;
+                    }
+
+                    switch (type.ToLower())
+                    {
+                        case "connected":
+                        case "roomscreated":
+                        case "roomcreated":
+                            // These are just confirmations, we can ignore or log them
+                            Console.WriteLine($"[HandleServerMessage] Received {type} confirmation");
+                            break;
+                        case "roomslist":
                             HandleRoomsListMessage(json);
                             break;
-                        case "JoinRoom":
+                        case "joinroom":
                             HandleJoinRoomMessage(json);
                             break;
-                        case "ShootResult":
+                        case "shootresult":
                             HandleShootResultMessage(json);
                             break;
-                        case "OpponentShoot":
+                        case "opponentshoot":
                             HandleOpponentShootMessage(json);
                             break;
-                        case "GameState":
+                        case "gamestate":
                             HandleGameStateMessage(json);
                             break;
-                        case "ChatMessage":
+                        case "chatmessage":
                             HandleChatMessage(json);
+                            break;
+                        case "error":
+                            Console.WriteLine($"[HandleServerMessage] Server error");
                             break;
                         default:
                             // Unknown message type - ignore or log in future if needed
+                            Console.WriteLine($"[HandleServerMessage] Unknown message type: {type}");
                             break;
                     }
                 }
@@ -389,6 +430,7 @@ namespace BattleOfSea.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error handling message: {ex.Message}");
+                Console.WriteLine($"Error stack trace: {ex.StackTrace}");
             }
         }
 
@@ -397,15 +439,44 @@ namespace BattleOfSea.Services
         {
             try
             {
-                var message = JsonSerializer.Deserialize<RoomsListMessage>(json);
-                if (message != null)
+                Console.WriteLine($"[HandleRoomsListMessage] Parsing rooms list...");
+                
+                using (var doc = JsonDocument.Parse(json))
                 {
-                    RoomsListUpdated?.Invoke(message);
+                    var root = doc.RootElement;
+                    if (root.TryGetProperty("payload", out var payloadElem) && payloadElem.TryGetProperty("rooms", out var roomsElem))
+                    {
+                        var rooms = new List<Room>();
+                        foreach (var roomElem in roomsElem.EnumerateArray())
+                        {
+                            var room = new Room(
+                                roomElem.GetProperty("name").GetString() ?? "Unknown",
+                                roomElem.GetProperty("players").GetInt32(),
+                                roomElem.GetProperty("maxPlayers").GetInt32()
+                            );
+                            
+                            if (roomElem.TryGetProperty("id", out var idElem))
+                            {
+                                room.Id = idElem.GetString() ?? "";
+                            }
+                            
+                            rooms.Add(room);
+                        }
+                        
+                        Console.WriteLine($"[HandleRoomsListMessage] ✅ Got {rooms.Count} rooms");
+                        
+                        var message = new RoomsListMessage { Rooms = rooms };
+                        RoomsListUpdated?.Invoke(message);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[HandleRoomsListMessage] ❌ No payload.rooms in message");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deserializing rooms list: {ex.Message}");
+                Console.WriteLine($"[HandleRoomsListMessage] ❌ Error deserializing rooms list: {ex.Message}");
             }
         }
 
