@@ -24,6 +24,7 @@ namespace BattleOfSea.Services
         // Игровые действия
         Task<bool> SendShootAsync(int row, int col, string roomId); // Отправить выстрел
         Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId); // Отправить расстановку кораблей
+        Task<bool> SendPlayerReadyAsync(string roomId); // Сообщить серверу, что игрок готов начать
         Task<bool> SendChatMessageAsync(string text, string? roomId = null); // Отправить сообщение чата
 
         // События сетевого взаимодействия

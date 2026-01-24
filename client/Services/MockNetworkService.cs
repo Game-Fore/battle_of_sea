@@ -45,6 +45,9 @@ namespace BattleOfSea.Services
         public Task<bool> SendShipPlacementAsync(List<ShipPlacementData> ships, string roomId) =>
             throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService.");
 
+        public Task<bool> SendPlayerReadyAsync(string roomId) =>
+            throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService.");
+
         public Task<bool> SendChatMessageAsync(string message, string? roomId = null) =>
             throw new NotSupportedException("MockNetworkService is not supported. Use NetworkService."); // исправлено на Task<bool>
     }

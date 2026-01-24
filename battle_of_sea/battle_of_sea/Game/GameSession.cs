@@ -10,6 +10,8 @@ namespace battle_of_sea.Game
         public Player Player1 { get; }
         public Player Player2 { get; }
         public bool IsFinished { get; private set; }
+        public bool Player1Ready { get; set; } = false;
+        public bool Player2Ready { get; set; } = false;
 
         public string CurrentTurnPlayerId { get; private set; }
 
@@ -37,6 +39,8 @@ namespace battle_of_sea.Game
 
         public Player GetOpponentPlayer() =>
             CurrentTurnPlayerId == Player1.Id ? Player2 : Player1;
+
+        public bool BothPlayersReady => Player1Ready && Player2Ready;
 
         public void SwitchTurn()
         {

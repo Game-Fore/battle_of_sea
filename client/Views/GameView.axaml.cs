@@ -1,4 +1,5 @@
 // Логика игры
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -15,26 +16,23 @@ namespace BattleOfSea.Views
             // DataContext будет установлен хостом (MainWindow), чтобы передать комнату
         }
 
-        // Обработчик изменения контекста данных (защищенный метод переопределения)
+        // Обработчик изменения контекста данных
         protected override void OnDataContextChanged(EventArgs e)
         {
             base.OnDataContextChanged(e);
-            
+
             // Находим таймер после инициализации
             _timerControl = this.FindControl<Controls.TimerControl>("GameTimer");
-            
+
             if (DataContext is ViewModels.GameViewModel gvm && _timerControl != null)
             {
-                // Подписываемся на события таймера
+                // ✅ Таймер больше НЕ переключает ход напрямую
+                // Просто останавливаем таймер при истечении времени
                 _timerControl.OnTimeExpired += () =>
                 {
-                    // При истечении времени переключаем ход на противника
-                    if (gvm.State == Models.GameState.YourTurn)
-                    {
-                        gvm.HandleTimeExpired();
-                    }
+                    _timerControl.StopTimer();
                 };
-                
+
                 // Подписываемся на изменения состояния игры для управления таймером
                 gvm.PropertyChanged += (s, args) =>
                 {
@@ -43,13 +41,13 @@ namespace BattleOfSea.Views
                         UpdateTimer(gvm);
                     }
                 };
-                
+
                 // Инициализируем таймер
                 UpdateTimer(gvm);
             }
         }
 
-        // Обновление состояния таймера (приватный метод)
+        // Обновление состояния таймера
         private void UpdateTimer(ViewModels.GameViewModel gvm)
         {
             if (_timerControl == null) return;
@@ -66,12 +64,11 @@ namespace BattleOfSea.Views
             }
         }
 
-        // Обработчик клика "Выйти в лобби" (приватный метод)
-        private async void ExitToLobby_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        // Обработчик клика "Выйти в лобби"
+        private async void ExitToLobby_Click(object? sender, RoutedEventArgs e)
         {
             if (DataContext is ViewModels.GameViewModel gvm)
             {
-                // Показываем диалог подтверждения
                 var dialog = new ConfirmDialog
                 {
                     Message = "Вы уверены, что хотите выйти в лобби? Текущая игра будет завершена."
@@ -88,28 +85,23 @@ namespace BattleOfSea.Views
                 }
                 else
                 {
-                    // Если не нашли родительское окно, просто выходим
                     gvm.RequestExit();
                 }
             }
         }
 
-        // Обработчик клика "Открыть чат" (приватный метод)
-        private async void OpenChat_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        // Обработчик клика "Открыть чат"
+        private async void OpenChat_Click(object? sender, RoutedEventArgs e)
         {
-            // Создаем окно чата
             var chatWindow = new ChatWindow();
-            
-            // Получаем родительское окно (MainWindow)
+
             var parent = this.VisualRoot as Window;
             if (parent != null)
             {
-                // Открываем диалоговое окно (блокирует взаимодействие с родителем)
                 await chatWindow.ShowDialog(parent);
             }
             else
             {
-                // Если не нашли родителя, просто показываем окно
                 chatWindow.Show();
             }
         }

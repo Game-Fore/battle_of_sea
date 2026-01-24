@@ -66,8 +66,8 @@ namespace BattleOfSea.Models
     // Сообщение о смене состояния игры
     public class GameStateMessage : NetworkMessage
     {
-        // Новое состояние игры
-        public GameState State { get; set; }
+        // Новое состояние игры (строка для гибкости)
+        public string State { get; set; } = string.Empty;
         // ID комнаты
         public string RoomId { get; set; } = string.Empty;
     }

@@ -77,6 +77,7 @@ namespace BattleOfSea.ViewModels
             try
             {
                 ErrorMessage = null;
+                Console.WriteLine("[LoadRoomsAsync] Loading rooms...");
                 
                 // Проверяем подключение к серверу
                 if (!_networkService.IsConnected)
@@ -90,13 +91,12 @@ namespace BattleOfSea.ViewModels
 
                 _demoMode = false;
                 var rooms = await _networkService.GetRoomsAsync();
+                Console.WriteLine($"[LoadRoomsAsync] Got {rooms.Count} rooms from server");
                 Rooms.Clear();
                 foreach (var room in rooms)
                 {
-                    if (room.Players < room.MaxPlayers)
-                    {
-                        Rooms.Add(room);
-                    }
+                    Rooms.Add(room);
+                    Console.WriteLine($"[LoadRoomsAsync] Added room: {room.Name} ({room.Players}/{room.MaxPlayers})");
                 }
             }
             catch (System.Exception ex)
@@ -122,6 +122,8 @@ namespace BattleOfSea.ViewModels
         private void OnRoomsListUpdated(Models.RoomsListMessage message)
         {
             Console.WriteLine($"[Lobby] OnRoomsListUpdated: received {message.Rooms.Count} rooms");
+            // Server is available if we receive a real rooms list — disable demo mode
+            _demoMode = false;
             Rooms.Clear();
             foreach (var room in message.Rooms)
             {
@@ -207,9 +209,21 @@ namespace BattleOfSea.ViewModels
         {
             if (message.Success)
             {
-                // Ищем комнату в списке, если не найдена - создаем минимальный объект
-                var room = Rooms.FirstOrDefault(r => r.Name == message.RoomId) 
-                    ?? new Models.Room(message.RoomId, 1, 2);
+                Console.WriteLine($"[DEBUG] OnJoinRoomResult: roomId from server = '{message.RoomId}'");
+                // Ищем комнату в списке по ID, если не найдена - создаем объект с ID
+                var room = Rooms.FirstOrDefault(r => r.Id == message.RoomId);
+                if (room == null)
+                {
+                    Console.WriteLine($"[DEBUG] Room not found by RoomId, searching by Name...");
+                    room = Rooms.FirstOrDefault(r => r.Name == message.RoomId);
+                }
+                if (room == null)
+                {
+                    Console.WriteLine($"[DEBUG] Room still not found! Creating new Room with Id={message.RoomId}");
+                    room = new Models.Room(message.RoomId, 1, 2);
+                    room.Id = message.RoomId; // CRITICAL: Set the Id
+                }
+                Console.WriteLine($"[DEBUG] Invoking JoinRequested with room: Name={room.Name}, Id={room.Id}");
                 JoinRequested?.Invoke(room);
             }
         }
@@ -225,6 +239,14 @@ namespace BattleOfSea.ViewModels
             try
             {
                 ErrorMessage = null;
+                
+                // Проверяем, не полная ли комната
+                if (room.Players >= room.MaxPlayers)
+                {
+                    ErrorMessage = $"❌ Комната '{room.Name}' уже полная!";
+                    Console.WriteLine($"[Lobby] Room {room.Name} is full");
+                    return;
+                }
                 
                 // В режиме демонстрации просто переходим в комнату
                 if (_demoMode)
@@ -242,7 +264,6 @@ namespace BattleOfSea.ViewModels
                     // Небольшая задержка для гарантии срабатывания события после завершения асинхронной операции
                     await System.Threading.Tasks.Task.Delay(10);
                     // Всегда вызываем событие с комнатой, которая была передана
-                    JoinRequested?.Invoke(room);
                 }
                 else
                 {

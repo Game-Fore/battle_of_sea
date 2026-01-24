@@ -94,9 +94,13 @@ namespace BattleOfSea
         {
             if (room == null || _mainContent == null) return;
 
+            Console.WriteLine($"[DEBUG] OnRoomJoinRequested called with room: Name={room.Name}, Id={room.Id}, Players={room.Players}/{room.MaxPlayers}");
+            
             // Создаем представление игры и модель представления с сетевым сервисом
             var gameView = new Views.GameView();
+            Console.WriteLine($"[DEBUG] Creating GameViewModel with room Id={room.Id}");
             var gvm = new ViewModels.GameViewModel(room, _networkService);
+            Console.WriteLine($"[DEBUG] GameViewModel created");
             gameView.DataContext = gvm;
 
             // Подписываемся на событие запроса выхода из игры

@@ -109,11 +109,214 @@ namespace battle_of_sea.Network
                         break;
                     }
                 case "ping":
-                    await SendAsync( new ServerMessage { Type = "pong", Payload = new { } });
+                    await SendAsync(new ServerMessage { Type = "pong", Payload = new { } });
                     break;
 
+                case "createroom":
+                    {
+                        if (_player == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Not connected" }
+                            });
+                            break;
+                        }
+
+                        string roomName = message.Payload.GetProperty("roomName").GetString();
+                        int maxPlayers = 2;
+
+                        var room = GameServer.Instance.GameManager.CreateRoom(roomName, maxPlayers);
+                        GameServer.Instance.GameManager.JoinRoom(_player, room);
+                        room.PlayerReadyStatus[_player.Id] = false;
+
+                        Console.WriteLine($"[ROOM_CREATED] Room {room.Name} (ID: {room.Id}) created by {_player.Name}");
+
+                        // Отправляем создателю информацию о комнате
+                        await SendAsync(new ServerMessage
+                        {
+                            Type = "RoomCreated",
+                            Payload = new
+                            {
+                                roomId = room.Id,
+                                roomName = room.Name,
+                                maxPlayers = room.MaxPlayers
+                            }
+                        });
+
+                        // Отправляем обновленный список всем
+                        await BroadcastRoomsList();
+                        break;
+                    }
+
+                case "joinroom":
+                    {
+                        if (_player == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Not connected" }
+                            });
+                            break;
+                        }
+
+                        string roomId = message.Payload.GetProperty("roomId").GetString();
+                        var room = GameServer.Instance.GameManager.FindRoomById(roomId);
+
+                        if (room == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "JoinRoomResult",
+                                Payload = new
+                                {
+                                    success = false,
+                                    message = "Room not found"
+                                }
+                            });
+                            break;
+                        }
+
+                        if (room.IsGameStarted)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "JoinRoomResult",
+                                Payload = new
+                                {
+                                    success = false,
+                                    message = "Game already started"
+                                }
+                            });
+                            break;
+                        }
+
+                        if (room.Players.Count >= room.MaxPlayers)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "JoinRoomResult",
+                                Payload = new
+                                {
+                                    success = false,
+                                    message = "Room is full"
+                                }
+                            });
+                            break;
+                        }
+
+                        GameServer.Instance.GameManager.JoinRoom(_player, room);
+                        room.PlayerReadyStatus[_player.Id] = false;
+
+                        Console.WriteLine($"[ROOM_JOINED] Player {_player.Name} joined room {room.Name}");
+
+                        // Отправляем результат присоединения
+                        await SendAsync(new ServerMessage
+                        {
+                            Type = "JoinRoomResult",
+                            Payload = new
+                            {
+                                success = true,
+                                roomId = room.Id,
+                                roomName = room.Name,
+                                players = room.Players.Select(p => new { id = p.Id, name = p.Name }).ToList(),
+                                message = "Joined room successfully"
+                            }
+                        });
+
+                        // Отправляем обновленный список всем
+                        await BroadcastRoomsList();
+                        break;
+                    }
+
+                case "playerready":
+                    {
+                        if (_player == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Not connected" }
+                            });
+                            break;
+                        }
+
+                        var room = GameServer.Instance.GameManager.FindRoomByPlayerId(_player.Id);
+                        if (room == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Not in a room" }
+                            });
+                            break;
+                        }
+
+                        bool success = GameServer.Instance.GameManager.MarkPlayerReady(_player.Id);
+                        if (!success)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Failed to mark player as ready" }
+                            });
+                            break;
+                        }
+
+                        // Отправляем подтверждение
+                        await SendAsync(new ServerMessage
+                        {
+                            Type = "PlayerReady",
+                            Payload = new
+                            {
+                                playerId = _player.Id,
+                                message = "Player ready"
+                            }
+                        });
+
+                        Console.WriteLine($"[PLAYER_READY] {_player.Name} is ready in room {room.Name}");
+
+                        // Проверяем, готовы ли все игроки
+                        if (room.AreAllPlayersReady())
+                        {
+                            bool gameStarted = GameServer.Instance.GameManager.CheckAndStartGame(room);
+                            if (gameStarted)
+                            {
+                                Console.WriteLine($"[GAME_STARTED] Game starting in room {room.Name}");
+
+                                // Отправляем обоим игрокам сообщение о старте игры
+                                var gameStartMessage = new ServerMessage
+                                {
+                                    Type = "GameStateChanged",
+                                    Payload = new
+                                    {
+                                        state = "GameStarted",
+                                        roomId = room.Id,
+                                        players = room.Players.Select(p => new { id = p.Id, name = p.Name }).ToList()
+                                    }
+                                };
+
+                                foreach (var player in room.Players)
+                                {
+                                    if (player.Connection is ClientConnection conn)
+                                    {
+                                        await conn.SendAsync(gameStartMessage);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+
+                case "roomslist":
+                    {
+                        await BroadcastRoomsList();
+                        break;
+                    }
+
                 case "shoot":
-                   
                     {
                         if (_player == null)
                         {
@@ -178,12 +381,43 @@ namespace battle_of_sea.Network
                         break;
                     }
 
-                
-
                 default:
-                    await SendAsync( new ServerMessage { Type = "error", Payload = new { message = "Unknown command" } });
+                    await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Unknown command" } });
                     break;
             }
+        }
+
+        private async Task BroadcastRoomsList()
+        {
+            var rooms = GameServer.Instance.GameManager.GetAvailableRooms();
+            var roomsList = new ServerMessage
+            {
+                Type = "RoomsList",
+                Payload = new
+                {
+                    rooms = rooms.Select(r => new
+                    {
+                        id = r.Id,
+                        name = r.Name,
+                        maxPlayers = r.MaxPlayers,
+                        currentPlayers = r.Players.Count,
+                        isGameStarted = r.IsGameStarted,
+                        players = r.Players.Select(p => new { id = p.Id, name = p.Name }).ToList()
+                    }).ToList()
+                }
+            };
+
+            // Отправляем всем подключенным клиентам
+            var allPlayers = GameServer.Instance.GameManager.Players;
+            foreach (var player in allPlayers)
+            {
+                if (player.Connection is ClientConnection connection)
+                {
+                    await connection.SendAsync(roomsList);
+                }
+            }
+
+            Console.WriteLine($"[BROADCAST] RoomsList sent to {allPlayers.Count} players");
         }
 
         public Task SendAsync(ServerMessage message)

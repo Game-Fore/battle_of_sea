@@ -56,13 +56,13 @@ namespace BattleOfSea.Views
 
             if (DataContext is ViewModels.GameViewModel gvm)
             {
-                BuildBoard(OwnBoardGrid, gvm.Own, true);
-                BuildBoard(EnemyBoardGrid, gvm.Enemy, false);
+                BuildBoard(OwnBoardGrid, gvm.Own, true, gvm);
+                BuildBoard(EnemyBoardGrid, gvm.Enemy, false, gvm);
             }
             else if (DataContext is ViewModels.BoardViewModel bvm)
             {
-                BuildBoard(OwnBoardGrid, bvm.Own, true);
-                BuildBoard(EnemyBoardGrid, bvm.Enemy, false);
+                BuildBoard(OwnBoardGrid, bvm.Own, true, null);
+                BuildBoard(EnemyBoardGrid, bvm.Enemy, false, null);
             }
         }
 
@@ -113,13 +113,17 @@ namespace BattleOfSea.Views
         }
 
         // Построение игрового поля (приватный метод)
-        private void BuildBoard(Grid grid, Models.Board board, bool isOwnBoard)
+        private void BuildBoard(Grid grid, Models.Board board, bool isOwnBoard, ViewModels.GameViewModel? gameVM = null)
         {
             grid.Children.Clear();
             grid.ColumnDefinitions.Clear();
             grid.RowDefinitions.Clear();
 
             int size = board.Size;
+            
+            // Определяем активен ли игрок
+            bool isYourTurn = gameVM?.State == Models.GameState.YourTurn;
+            bool isGameActive = gameVM != null && (gameVM.State == Models.GameState.YourTurn || gameVM.State == Models.GameState.OpponentTurn);
 
                 // Устанавливаем фиксированный размер для квадратного поля 10x10
                 int totalSize = HeaderSize + size * CellSize; // 28 + 10*30 = 328 пикселей
@@ -224,7 +228,7 @@ namespace BattleOfSea.Views
                             if (gvm.SelectedShipSize.HasValue)
                             {
                                 gvm.PlaceShipAtCell(cell);
-                                BuildBoard(grid, board, isOwnBoard); // Перестраиваем для обновления
+                                BuildBoard(grid, board, isOwnBoard, gvm); // Перестраиваем для обновления
                             }
                         };
                         
@@ -278,7 +282,7 @@ namespace BattleOfSea.Views
                         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
                         VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
                         Margin = new Avalonia.Thickness(0),
-                        IsHitTestVisible = !cell.IsRevealed // Отключаем клики для открытых ячеек
+                        IsHitTestVisible = isYourTurn && !cell.IsRevealed // Кликабельно только если YourTurn и ячейка не открыта
                     };
                     
                     var textBlock = new TextBlock
@@ -294,7 +298,7 @@ namespace BattleOfSea.Views
                     // Обработчик клика через PointerPressed
                     border.PointerPressed += (s, e) =>
                     {
-                        if (s is Border b && b.Tag is Models.BoardCell clickedCell && !clickedCell.IsRevealed)
+                        if (s is Border b && b.Tag is Models.BoardCell clickedCell && !clickedCell.IsRevealed && isYourTurn)
                         {
                             EnemyCell_Click(border, clickedCell);
                         }

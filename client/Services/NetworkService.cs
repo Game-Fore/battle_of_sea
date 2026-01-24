@@ -81,8 +81,14 @@ namespace BattleOfSea.Services
                 await SendMessageAsync(connectMessage);
                 Console.WriteLine($"[NetworkService] Connect message sent");
 
+                // Даем серверу время на обработку Connect
+                await Task.Delay(100);
+                
                 // Запускаем слушатель сообщений
                 _ = ListenForMessagesAsync();
+
+                // Просим сервер отправить список комнат
+                await GetRoomsAsync();
 
                 UserConnected?.Invoke(new UserConnectedMessage
                 {
@@ -139,16 +145,19 @@ namespace BattleOfSea.Services
         {
             try
             {
+                Console.WriteLine($"[GetRoomsAsync] Requesting rooms from server...");
                 var message = new { type = "GetRooms" };
                 await SendMessageAsync(message);
+                Console.WriteLine($"[GetRoomsAsync] GetRooms request sent");
                 
                 // Сервер отправит RoomsListMessage через WebSocket
-                // Это обработается в ListenForMessagesAsync
+                // Это обработается в ListenForMessagesAsync -> HandleRoomsListMessage
+                // -> RoomsListUpdated.Invoke()
                 return new List<Room>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting rooms: {ex.Message}");
+                Console.WriteLine($"[GetRoomsAsync] ❌ Error getting rooms: {ex.Message}");
                 ConnectionError?.Invoke($"Failed to get rooms: {ex.Message}");
                 return new List<Room>();
             }
@@ -183,22 +192,33 @@ namespace BattleOfSea.Services
         {
             try
             {
-                _currentRoomId = room.Name;
+                Console.WriteLine($"[DEBUG] ============ JoinRoomAsync START ============");
+                Console.WriteLine($"[DEBUG] Input room: Name={room.Name}, Id={room.Id}");
+                
+                // Use room.Id when communicating with server (server rooms identified by Id)
+                _currentRoomId = room.Id;
+                Console.WriteLine($"[DEBUG] Set _currentRoomId = '{_currentRoomId}'");
+                Console.WriteLine($"[DEBUG] _currentUserId = '{_currentUserId}'");
+                
                 var message = new
                 {
                     type = "JoinRoom",
-                    roomId = room.Name,
+                    roomId = room.Id,
                     userId = _currentUserId,
                     password = password
                 };
 
+                string jsonDebug = JsonSerializer.Serialize(message);
+                Console.WriteLine($"[DEBUG] JoinRoom JSON = {jsonDebug}");
+                
                 await SendMessageAsync(message);
+                Console.WriteLine($"[DEBUG] ============ JoinRoomAsync END ============");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error joining room: {ex.Message}");
-                ConnectionError?.Invoke($"Failed to join room: {ex.Message}");
+                Console.WriteLine($"[ERROR] JoinRoomAsync: {ex.Message}");
+                ConnectionError?.Invoke($"Ошибка присоединения: {ex.Message}");
                 return false;
             }
         }
@@ -274,6 +294,55 @@ namespace BattleOfSea.Services
             }
         }
 
+        // Отправить сигнал готовности (публичный метод)
+        public async Task<bool> SendPlayerReadyAsync(string roomId)
+        {
+            try
+            {
+                Console.WriteLine($"[DEBUG] ============ SendPlayerReadyAsync START ============");
+                Console.WriteLine($"[DEBUG] Input params: roomId='{roomId}'");
+                Console.WriteLine($"[DEBUG] Instance state: _currentUserId='{_currentUserId}', _currentRoomId='{_currentRoomId}'");
+                Console.WriteLine($"[DEBUG] WebSocket state: {_webSocket?.State}");
+                
+                // Валидация roomId
+                if (string.IsNullOrEmpty(roomId) || roomId == "*")
+                {
+                    Console.WriteLine($"[ERROR] SendPlayerReadyAsync: roomId некорректен = '{roomId}'. Используем _currentRoomId.");
+                    roomId = _currentRoomId ?? "";
+                }
+                
+                if (string.IsNullOrEmpty(roomId))
+                {
+                    throw new InvalidOperationException("roomId не установлен. Сначала присоедините к комнате!");
+                }
+
+                Console.WriteLine($"[DEBUG] Final roomId for message: '{roomId}'");
+                Console.WriteLine($"[DEBUG] Final userId for message: '{_currentUserId}'");
+
+                var message = new
+                {
+                    type = "PlayerReady",
+                    roomId = roomId,
+                    userId = _currentUserId
+                };
+
+                string jsonDebug = JsonSerializer.Serialize(message);
+                Console.WriteLine($"[DEBUG] PlayerReady JSON = {jsonDebug}");
+                Console.WriteLine($"[DEBUG] Calling SendMessageAsync...");
+                
+                await SendMessageAsync(message);
+                Console.WriteLine($"[NetworkService] ✅ PlayerReady отправлена для комнаты {roomId}");
+                Console.WriteLine($"[DEBUG] ============ SendPlayerReadyAsync END ============");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] SendPlayerReadyAsync: {ex.Message}");
+                ConnectionError?.Invoke($"Ошибка отправки PlayerReady: {ex.Message}");
+                return false;
+            }
+        }
+
         // Отправить сообщение чата (публичный метод)
         public async Task<bool> SendChatMessageAsync(string text, string? roomId = null)
         {
@@ -310,6 +379,7 @@ namespace BattleOfSea.Services
             }
 
             var json = JsonSerializer.Serialize(message);
+            Console.WriteLine($"[DEBUG] RAW JSON OUT = {json}");
             Console.WriteLine($"[SendMessage] Sending: {json}");
             var buffer = Encoding.UTF8.GetBytes(json);
 
@@ -414,6 +484,14 @@ namespace BattleOfSea.Services
                         case "gamestate":
                             HandleGameStateMessage(json);
                             break;
+                        case "gamestart":
+                            HandleGameStartMessage(json);
+                            break;
+                        case "gamechanged":
+                        case "gamestatechanged":
+                            Console.WriteLine($"[ListenForMessagesAsync] ✅ Received gamechanged/gamestatechanged message");
+                            HandleGameStateChangedMessage(json);
+                            break;
                         case "chatmessage":
                             HandleChatMessage(json);
                             break;
@@ -439,28 +517,43 @@ namespace BattleOfSea.Services
         {
             try
             {
+                Console.WriteLine($"[HandleRoomsListMessage] Raw JSON: {json}");
                 Console.WriteLine($"[HandleRoomsListMessage] Parsing rooms list...");
                 
                 using (var doc = JsonDocument.Parse(json))
                 {
                     var root = doc.RootElement;
-                    if (root.TryGetProperty("payload", out var payloadElem) && payloadElem.TryGetProperty("rooms", out var roomsElem))
+                    Console.WriteLine($"[HandleRoomsListMessage] Root ValueKind: {root.ValueKind}");
+                    
+                    // Try both "Payload" and "payload"
+                    JsonElement payloadElem = default;
+                    if (!root.TryGetProperty("Payload", out payloadElem) && !root.TryGetProperty("payload", out payloadElem))
                     {
+                        Console.WriteLine($"[HandleRoomsListMessage] ❌ No 'Payload' or 'payload' found in root");
+                        return;
+                    }
+                    
+                    Console.WriteLine($"[HandleRoomsListMessage] Found payload");
+                    if (payloadElem.TryGetProperty("rooms", out var roomsElem))
+                    {
+                        Console.WriteLine($"[HandleRoomsListMessage] Found rooms array with {roomsElem.GetArrayLength()} elements");
                         var rooms = new List<Room>();
                         foreach (var roomElem in roomsElem.EnumerateArray())
                         {
+                            Console.WriteLine($"[HandleRoomsListMessage] Parsing room: {roomElem}");
                             var room = new Room(
-                                roomElem.GetProperty("name").GetString() ?? "Unknown",
-                                roomElem.GetProperty("players").GetInt32(),
-                                roomElem.GetProperty("maxPlayers").GetInt32()
+                                roomElem.GetProperty("Name").GetString() ?? "Unknown",
+                                roomElem.GetProperty("Players").GetInt32(),
+                                roomElem.GetProperty("MaxPlayers").GetInt32()
                             );
                             
-                            if (roomElem.TryGetProperty("id", out var idElem))
+                            if (roomElem.TryGetProperty("Id", out var idElem))
                             {
                                 room.Id = idElem.GetString() ?? "";
                             }
                             
                             rooms.Add(room);
+                            Console.WriteLine($"[HandleRoomsListMessage] Added room: {room.Name} ({room.Players}/{room.MaxPlayers})");
                         }
                         
                         Console.WriteLine($"[HandleRoomsListMessage] ✅ Got {rooms.Count} rooms");
@@ -470,32 +563,51 @@ namespace BattleOfSea.Services
                     }
                     else
                     {
-                        Console.WriteLine($"[HandleRoomsListMessage] ❌ No payload.rooms in message");
+                        Console.WriteLine($"[HandleRoomsListMessage] ❌ No 'rooms' array in payload");
                     }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[HandleRoomsListMessage] ❌ Error deserializing rooms list: {ex.Message}");
+                Console.WriteLine($"[HandleRoomsListMessage] Stack trace: {ex.StackTrace}");
             }
         }
 
         // Обработка присоединения к комнате (приватный метод)
         private void HandleJoinRoomMessage(string json)
+    {
+        try
         {
-            try
+            Console.WriteLine($"[HandleJoinRoomMessage] ✅ Joined room successfully");
+            var message = JsonSerializer.Deserialize<JoinRoomMessage>(json);
+            if (message != null)
             {
-                var message = JsonSerializer.Deserialize<JoinRoomMessage>(json);
-                if (message != null)
+                // 🔧 FIX: если сервер не прислал RoomId — используем локальный
+                if (string.IsNullOrWhiteSpace(message.RoomId))
                 {
-                    JoinRoomResult?.Invoke(message);
+                    Console.WriteLine(
+                        $"[HandleJoinRoomMessage] ⚠️ Server did not send RoomId. Using local _currentRoomId = '{_currentRoomId}'"
+                    );
+                    message.RoomId = _currentRoomId;
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deserializing join room: {ex.Message}");
+                else
+                {
+                    _currentRoomId = message.RoomId;
+                    Console.WriteLine(
+                        $"[HandleJoinRoomMessage] ✅ RoomId received from server = '{_currentRoomId}'"
+                    );
+                }
+
+                JoinRoomResult?.Invoke(message);
             }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[HandleJoinRoomMessage] ❌ Error deserializing join room: {ex.Message}");
+        }
+    }
+
 
         // Результат выстрела (приватный метод)
         private void HandleShootResultMessage(string json)
@@ -545,6 +657,101 @@ namespace BattleOfSea.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error deserializing game state: {ex.Message}");
+            }
+        }
+
+        private void HandleGameStateChangedMessage(string json)
+        {
+            try
+            {
+                Console.WriteLine($"[DEBUG] ============ HandleGameStateChangedMessage START ============");
+                Console.WriteLine($"[HandleGameStateChangedMessage] ✅ Received game state change message");
+                Console.WriteLine($"[HandleGameStateChangedMessage] Raw JSON: {json}");
+                using (var doc = JsonDocument.Parse(json))
+                {
+                    var root = doc.RootElement;
+                    var propNames = string.Join(", ", root.EnumerateObject().Select(p => p.Name));
+                    Console.WriteLine($"[DEBUG] Root properties: {propNames}");
+                    Console.WriteLine($"[HandleGameStateChangedMessage] Root properties: {propNames}");
+                    
+                    if (root.TryGetProperty("Payload", out var payloadElem) || root.TryGetProperty("payload", out payloadElem))
+                    {
+                        Console.WriteLine($"[DEBUG] Found payload element");
+                        Console.WriteLine($"[HandleGameStateChangedMessage] Found payload");
+                        if (payloadElem.TryGetProperty("state", out var stateElem))
+                        {
+                            var state = stateElem.GetString();
+                            Console.WriteLine($"[DEBUG] Parsed state: '{state}'");
+                            Console.WriteLine($"[HandleGameStateChangedMessage] ✅ New state: {state}");
+                            
+                            var gameStateMessage = new GameStateMessage
+                            {
+                                Type = "GameState",
+                                State = state ?? "WaitingForOpponent"
+                            };
+                            Console.WriteLine($"[DEBUG] GameStateMessage created: Type='{gameStateMessage.Type}', State='{gameStateMessage.State}'");
+                            Console.WriteLine($"[DEBUG] Invoking GameStateChanged event with state: {gameStateMessage.State}");
+                            Console.WriteLine($"[HandleGameStateChangedMessage] Invoking GameStateChanged event with state: {gameStateMessage.State}");
+                            
+                            GameStateChanged?.Invoke(gameStateMessage);
+                            
+                            Console.WriteLine($"[DEBUG] ✅ GameStateChanged event invoked successfully");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG] ❌ No 'state' property in payload");
+                            Console.WriteLine($"[HandleGameStateChangedMessage] ❌ No 'state' property in payload");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[DEBUG] ❌ No Payload found in message");
+                        Console.WriteLine($"[HandleGameStateChangedMessage] ❌ No Payload found");
+                    }
+                }
+                Console.WriteLine($"[DEBUG] ============ HandleGameStateChangedMessage END ============");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] ============ HandleGameStateChangedMessage EXCEPTION ============");
+                Console.WriteLine($"[HandleGameStateChangedMessage] ❌ Error: {ex.Message}");
+                Console.WriteLine($"[HandleGameStateChangedMessage] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[DEBUG] Exception details: {ex}");
+                Console.WriteLine($"[DEBUG] ============ HandleGameStateChangedMessage EXCEPTION END ============");
+            }
+        }
+
+        private void HandleGameStartMessage(string json)
+        {
+            try
+            {
+                Console.WriteLine($"[HandleGameStartMessage] Game is starting!");
+                using (var doc = JsonDocument.Parse(json))
+                {
+                    var root = doc.RootElement;
+                    if (root.TryGetProperty("Payload", out var payloadElem) || root.TryGetProperty("payload", out payloadElem))
+                    {
+                        bool isYourTurn = false;
+                        if (payloadElem.TryGetProperty("isYourTurn", out var yourTurnElem))
+                        {
+                            isYourTurn = yourTurnElem.GetBoolean();
+                        }
+
+                        Console.WriteLine($"[HandleGameStartMessage] Your turn: {isYourTurn}");
+
+                        // Отправляем GameStateMessage для обновления состояния игры
+                        var gameStateMessage = new GameStateMessage
+                        {
+                            Type = "GameState",
+                            State = isYourTurn ? "YourTurn" : "OpponentTurn"
+                        };
+                        GameStateChanged?.Invoke(gameStateMessage);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[HandleGameStartMessage] Error: {ex.Message}");
             }
         }
 

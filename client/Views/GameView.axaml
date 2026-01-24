@@ -4,7 +4,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BattleOfSea.Controls"
              xmlns:views="clr-namespace:BattleOfSea.Views"
+             xmlns:converters="clr-namespace:BattleOfSea.Converters"
              x:Class="BattleOfSea.Views.GameView">
+  <UserControl.Resources>
+    <converters:StateToReadyVisibleConverter x:Key="StateToReadyVisibleConverter"/>
+    <converters:StateToOpponentBoardClickableConverter x:Key="StateToOpponentBoardClickable"/>
+    <converters:StateToGameActiveConverter x:Key="StateToGameActive"/>
+  </UserControl.Resources>
   <StackPanel Margin="8" Spacing="8">
     <!-- Экран размещения кораблей -->
     <views:ShipPlacementView DataContext="{Binding}" IsVisible="{Binding ShowPlacement}" />
@@ -40,7 +46,19 @@
         </Border>
       </StackPanel>
 
-      <controls:TimerControl Name="GameTimer" HorizontalAlignment="Center" />
+      <!-- Таймер и кнопка Готово -->
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24" Margin="0,12">
+        <controls:TimerControl Name="GameTimer" />
+        <Button Content="✅ Готово"
+                Command="{Binding ReadyCommand}"
+                IsVisible="{Binding State, Converter={StaticResource StateToReadyVisibleConverter}}"
+                MinHeight="36"
+                Padding="16,6"
+                FontSize="14"
+                Background="#10B981"
+                Foreground="White" />
+      </StackPanel>
+
       <views:BoardView DataContext="{Binding}" />
     </StackPanel>
   </StackPanel>

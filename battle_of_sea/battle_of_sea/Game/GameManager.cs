@@ -9,6 +9,7 @@ namespace battle_of_sea.Game
         public string Name { get; set; }
         public int MaxPlayers { get; set; }
         public List<Player> Players { get; set; } = new List<Player>();
+        public Dictionary<string, bool> PlayerReadyStatus { get; set; } = new Dictionary<string, bool>();
         public string? Password { get; set; }
         public bool IsGameStarted { get; set; } = false;
 
@@ -17,6 +18,19 @@ namespace battle_of_sea.Game
             Id = Guid.NewGuid().ToString();
             Name = name;
             MaxPlayers = maxPlayers;
+        }
+
+        public bool AreAllPlayersReady()
+        {
+            if (Players.Count < MaxPlayers)
+                return false;
+
+            foreach (var player in Players)
+            {
+                if (!PlayerReadyStatus.ContainsKey(player.Id) || !PlayerReadyStatus[player.Id])
+                    return false;
+            }
+            return true;
         }
     }
 
@@ -94,7 +108,8 @@ namespace battle_of_sea.Game
 
         public List<Room> GetRooms()
         {
-            return Rooms.Where(r => !r.IsGameStarted).ToList();
+            // Возвращаем ВСЕ комнаты - как пустые (только созданные), так и с игроками
+            return Rooms.ToList();
         }
 
         public void JoinRoom(Player player, Room room)
@@ -135,6 +150,58 @@ namespace battle_of_sea.Game
         {
             Console.WriteLine($"Game finished: {game.Player1.Name} vs {game.Player2.Name}");
             RemoveGame(game);
+        }
+
+        public Room? FindRoomByPlayerId(string playerId)
+        {
+            return Rooms.FirstOrDefault(r => r.Players.Any(p => p.Id == playerId));
+        }
+
+        public bool MarkPlayerReady(string playerId)
+        {
+            var room = FindRoomByPlayerId(playerId);
+            if (room == null)
+            {
+                Console.WriteLine($"[ERROR] Player {playerId} not in any room");
+                return false;
+            }
+
+            room.PlayerReadyStatus[playerId] = true;
+            Console.WriteLine($"[READY] Player {playerId} is ready in room {room.Name}");
+            
+            return true;
+        }
+
+        public bool CheckAndStartGame(Room room)
+        {
+            if (!room.AreAllPlayersReady() || room.Players.Count < room.MaxPlayers)
+            {
+                return false;
+            }
+
+            var game = new GameSession(room.Players[0], room.Players[1]);
+            game.GameFinished += FinishGame;
+            ActiveGames.Add(game);
+            room.IsGameStarted = true;
+
+            Console.WriteLine($"[GAME_START] Game started in room {room.Name}: {room.Players[0].Name} vs {room.Players[1].Name}");
+            return true;
+        }
+
+        public List<Room> GetAvailableRooms()
+        {
+            return Rooms.Where(r => !r.IsGameStarted && r.Players.Count < r.MaxPlayers).ToList();
+        }
+
+        public async Task BroadcastToRoom(Room room, object message)
+        {
+            foreach (var player in room.Players)
+            {
+                if (player.Connection is Network.ClientConnection connection)
+                {
+                    await connection.SendAsync((Protocol.ServerMessage)message);
+                }
+            }
         }
     }
 }

@@ -450,14 +450,16 @@ namespace BattleOfSea.Services
                 var message = new GameStateMessage
                 {
                     Type = "GameState",
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = DateTime.UtcNow,
+                    State = string.Empty
                 };
 
                 if (root.TryGetProperty("state", out JsonElement stateElement))
                 {
-                    if (Enum.TryParse<GameState>(stateElement.GetString(), out var state))
+                    var stateStr = stateElement.GetString();
+                    if (!string.IsNullOrEmpty(stateStr))
                     {
-                        message.State = state;
+                        message.State = stateStr;
                     }
                 }
 

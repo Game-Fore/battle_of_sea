@@ -28,6 +28,7 @@
               <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
                 <TextBlock Classes="badge" Text="{Binding PlayersDisplay}" VerticalAlignment="Center" />
                 <Button Content="Присоединиться" Command="{Binding DataContext.JoinCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" 
+                        IsEnabled="{Binding IsJoinAllowed}"
                         HorizontalContentAlignment="Center" />
               </StackPanel>
             </Grid>

@@ -6,6 +6,8 @@ namespace BattleOfSea.Models
     {
         // Ожидание противника
         WaitingForOpponent,
+        // Готов начать игру (оба разместили корабли)
+        ReadyToStart,
         // Ваш ход
         YourTurn,
         // Ход противника
