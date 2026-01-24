@@ -33,6 +33,7 @@ namespace BattleOfSea
             if (_lobbyView?.DataContext is ViewModels.LobbyViewModel lvm)
             {
                 lvm.JoinRequested += OnRoomJoinRequested;
+                lvm.GameStartRequested += OnGameStartRequested;
             }
 
             // Подключаемся к серверу при загрузке окна
@@ -115,6 +116,36 @@ namespace BattleOfSea
 
             // Устанавливаем представление игры как текущее содержимое
             _mainContent.Content = gameView;
+        }
+
+        // Обработчик запроса начала игры (приватный метод)
+        private void OnGameStartRequested(Models.Room? room)
+        {
+            Console.WriteLine($"[MainWindow] GameStartRequested received with room: {room?.Name ?? "NULL"}");
+
+            if (room == null || _mainContent == null)
+            {
+                Console.WriteLine("[MainWindow] ❌ Room is null or MainContent not found!");
+                return;
+            }
+
+            Console.WriteLine($"[MainWindow] Creating GameView for room: {room.Name} (Id={room.Id})");
+            var gameView = new Views.GameView();
+            var gvm = new ViewModels.GameViewModel(room, _networkService);
+            gameView.DataContext = gvm;
+
+            // Подписываемся на событие запроса выхода из игры
+            gvm.ExitRequested += () =>
+            {
+                // Возвращаемся в лобби
+                if (_mainContent != null && _lobbyView != null)
+                {
+                    _mainContent.Content = _lobbyView;
+                }
+            };
+
+            _mainContent.Content = gameView;
+            Console.WriteLine("[MainWindow] ✅ GameView switched successfully");
         }
     }
 }

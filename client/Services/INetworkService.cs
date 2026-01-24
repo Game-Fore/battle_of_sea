@@ -14,6 +14,8 @@ namespace BattleOfSea.Services
         Task DisconnectAsync();
         // Флаг подключения
         bool IsConnected { get; }
+        // Текущая комната
+        Room? CurrentRoom { get; }
 
         // Комнаты
         Task<List<Room>> GetRoomsAsync(); // Получить список игровых комнат

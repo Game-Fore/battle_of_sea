@@ -20,6 +20,7 @@ namespace BattleOfSea.Services
         private CancellationTokenSource? _cancellationTokenSource;
         private string? _currentUserId;
         private string? _currentRoomId;
+        private Room? _currentRoom; // ← Сохраняем текущую комнату
 
         // Флаг подключения к серверу (публичное свойство)
         public bool IsConnected => _isConnected;
@@ -40,6 +41,9 @@ namespace BattleOfSea.Services
         public event Action<ChatMessage>? ChatMessageReceived;
         // Событие ошибки соединения (публичное событие)
         public event Action<string>? ConnectionError;
+
+        // Флаг подключения к серверу (публичное свойство)
+        public Room? CurrentRoom => _currentRoom;
 
         // Конструктор сетевого сервиса (публичный)
         public NetworkService(string serverHost = "localhost", int serverPort = 5555)
@@ -196,9 +200,12 @@ namespace BattleOfSea.Services
                 Console.WriteLine($"[DEBUG] Input room: Name={room.Name}, Id={room.Id}");
                 
                 // Use room.Id when communicating with server (server rooms identified by Id)
+                _currentRoom = room;
                 _currentRoomId = room.Id;
                 Console.WriteLine($"[DEBUG] Set _currentRoomId = '{_currentRoomId}'");
+                Console.WriteLine($"[DEBUG] Set _currentRoom = '{_currentRoom?.Name}'");
                 Console.WriteLine($"[DEBUG] _currentUserId = '{_currentUserId}'");
+                Console.WriteLine($"[DEBUG] After setting: _currentRoomId = '{_currentRoomId}'");
                 
                 var message = new
                 {
@@ -212,6 +219,7 @@ namespace BattleOfSea.Services
                 Console.WriteLine($"[DEBUG] JoinRoom JSON = {jsonDebug}");
                 
                 await SendMessageAsync(message);
+                Console.WriteLine($"[DEBUG] After SendMessageAsync: _currentRoomId = '{_currentRoomId}', _currentRoom = '{_currentRoom?.Name}'");
                 Console.WriteLine($"[DEBUG] ============ JoinRoomAsync END ============");
                 return true;
             }
@@ -461,6 +469,7 @@ namespace BattleOfSea.Services
                         return;
                     }
 
+                    Console.WriteLine($"[HandleServerMessage] Processing message type: '{type}' | RoomId state: '{_currentRoomId}'");
                     switch (type.ToLower())
                     {
                         case "connected":
@@ -580,9 +589,12 @@ namespace BattleOfSea.Services
         try
         {
             Console.WriteLine($"[HandleJoinRoomMessage] ✅ Joined room successfully");
+            Console.WriteLine($"[HandleJoinRoomMessage] Raw JSON: {json}");
+            Console.WriteLine($"[HandleJoinRoomMessage] Before: _currentRoomId = '{_currentRoomId}'");
             var message = JsonSerializer.Deserialize<JoinRoomMessage>(json);
             if (message != null)
             {
+                Console.WriteLine($"[HandleJoinRoomMessage] Deserialized message: RoomId='{message.RoomId}', Success={message.Success}");
                 // 🔧 FIX: если сервер не прислал RoomId — используем локальный
                 if (string.IsNullOrWhiteSpace(message.RoomId))
                 {
@@ -598,8 +610,13 @@ namespace BattleOfSea.Services
                         $"[HandleJoinRoomMessage] ✅ RoomId received from server = '{_currentRoomId}'"
                     );
                 }
+                Console.WriteLine($"[HandleJoinRoomMessage] After: _currentRoomId = '{_currentRoomId}'");
 
                 JoinRoomResult?.Invoke(message);
+            }
+            else
+            {
+                Console.WriteLine($"[HandleJoinRoomMessage] ❌ Failed to deserialize JoinRoomMessage!");
             }
         }
         catch (Exception ex)
@@ -684,12 +701,35 @@ namespace BattleOfSea.Services
                             Console.WriteLine($"[DEBUG] Parsed state: '{state}'");
                             Console.WriteLine($"[HandleGameStateChangedMessage] ✅ New state: {state}");
                             
+                            // Извлекаем RoomId если он есть в сообщении
+                            string roomId = _currentRoomId ?? "";
+                            Console.WriteLine($"[HandleGameStateChangedMessage] DEBUG: _currentRoomId = '{_currentRoomId}', _currentRoom = '{_currentRoom?.Name}'");
+                            if (payloadElem.TryGetProperty("roomId", out var roomIdElem) || payloadElem.TryGetProperty("RoomId", out roomIdElem))
+                            {
+                                var extractedRoomId = roomIdElem.GetString();
+                                if (!string.IsNullOrEmpty(extractedRoomId))
+                                {
+                                    roomId = extractedRoomId;
+                                    Console.WriteLine($"[HandleGameStateChangedMessage] RoomId from message: {roomId}");
+                                }
+                            }
+                            
+                            if (string.IsNullOrEmpty(roomId))
+                            {
+                                Console.WriteLine($"[HandleGameStateChangedMessage] ⚠️ RoomId not found in message and no current room set");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[HandleGameStateChangedMessage] Using RoomId: {roomId}");
+                            }
+                            
                             var gameStateMessage = new GameStateMessage
                             {
                                 Type = "GameState",
-                                State = state ?? "WaitingForOpponent"
+                                State = state ?? "WaitingForOpponent",
+                                RoomId = roomId
                             };
-                            Console.WriteLine($"[DEBUG] GameStateMessage created: Type='{gameStateMessage.Type}', State='{gameStateMessage.State}'");
+                            Console.WriteLine($"[DEBUG] GameStateMessage created: Type='{gameStateMessage.Type}', State='{gameStateMessage.State}', RoomId='{gameStateMessage.RoomId}'");
                             Console.WriteLine($"[DEBUG] Invoking GameStateChanged event with state: {gameStateMessage.State}");
                             Console.WriteLine($"[HandleGameStateChangedMessage] Invoking GameStateChanged event with state: {gameStateMessage.State}");
                             

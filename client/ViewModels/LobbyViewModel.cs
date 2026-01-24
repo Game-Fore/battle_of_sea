@@ -54,6 +54,7 @@ namespace BattleOfSea.ViewModels
             // Подписываемся на обновления списка комнат
             _networkService.RoomsListUpdated += OnRoomsListUpdated;
             _networkService.JoinRoomResult += OnJoinRoomResult;
+            _networkService.GameStateChanged += OnGameStateChanged;
 
             // Загружаем комнаты с сервера
             _ = LoadRoomsAsync();
@@ -230,6 +231,33 @@ namespace BattleOfSea.ViewModels
 
         // Событие запроса присоединения к комнате (публичное событие)
         public event Action<Models.Room?>? JoinRequested;
+
+        // Событие запроса начала игры (публичное событие)
+        public event Action<Models.Room?>? GameStartRequested;
+
+        // Обработчик изменения состояния игры (приватный метод)
+        private void OnGameStateChanged(Models.GameStateMessage msg)
+        {
+            Console.WriteLine($"[Lobby] GameStateChanged: {msg.State}");
+            if (msg.State == "ReadyToStart")
+            {
+                Console.WriteLine("[Lobby] Game is ready — requesting game start UI");
+                // Ищем комнату по RoomId из сообщения
+                var room = Rooms.FirstOrDefault(r => r.Id == msg.RoomId);
+                if (room == null)
+                {
+                    Console.WriteLine($"[Lobby] ⚠️ Room not found in list by RoomId={msg.RoomId}, trying SelectedRoom");
+                    room = SelectedRoom;
+                }
+                if (room == null)
+                {
+                    Console.WriteLine($"[Lobby] ⚠️ SelectedRoom is null, trying NetworkService.CurrentRoom");
+                    room = _networkService.CurrentRoom;
+                }
+                Console.WriteLine($"[Lobby] GameStartRequested invoked with room: {room?.Name ?? "NULL"}");
+                GameStartRequested?.Invoke(room);
+            }
+        }
 
         // Присоединение к комнате (приватный метод)
         private async System.Threading.Tasks.Task JoinRoomAsync(Models.Room? room)

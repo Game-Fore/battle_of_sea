@@ -9,6 +9,7 @@ namespace BattleOfSea.Services
     public class MockNetworkService : INetworkService
     {
         public bool IsConnected => throw new NotSupportedException("MockNetworkService is not supported. Connect to a real server on port 5000.");
+        public Room? CurrentRoom => throw new NotSupportedException("MockNetworkService is not supported. Connect to a real server on port 5000.");
 
         // События интерфейса
         public event Action<ShootResultMessage>? ShootResultReceived { add { } remove { } }
