@@ -243,6 +243,10 @@ public class WebSocketConnection
                 await HandlePlayerReady(payload);
                 break;
 
+            case "playagain":
+                await HandlePlayAgain();
+                break;
+
             case "reconnect":
                 await HandleReconnect(payload);
                 break;
@@ -369,8 +373,8 @@ public class WebSocketConnection
 
             var row = payload.GetProperty("row").GetInt32();
             var col = payload.GetProperty("col").GetInt32();
-
-            await game.ProcessShotAsync(_player, row, col);
+            // Board использует (x,y) = (col, row); клиент шлёт row=Y, col=X
+            await game.ProcessShotAsync(_player, col, row);
         }
         catch (Exception ex)
         {
@@ -392,26 +396,41 @@ public class WebSocketConnection
                 return;
             }
 
-            var roomId = payload.GetProperty("roomId").GetString();
             var game = GameServer.Instance.GameManager.FindGameByPlayerId(_player.Id);
-
             if (game == null)
             {
-                await SendAsync(new ServerMessage
-                {
-                    Type = "error",
-                    Payload = new { message = "Not in a game" }
-                });
+                await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Not in a game" } });
                 return;
             }
 
-            // Обработка расстановки кораблей
-            await SendAsync(new ServerMessage
+            if (!payload.TryGetProperty("ships", out var shipsElem) || shipsElem.ValueKind != JsonValueKind.Array)
             {
-                Type = "shipPlacementResult",
-                Payload = new { success = true, message = "Ships placed successfully" }
-            });
+                await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Missing or invalid ships array" } });
+                return;
+            }
 
+            _player.Board.Clear();
+            foreach (var s in shipsElem.EnumerateArray())
+            {
+                var x = GetInt(s, "x");
+                var y = GetInt(s, "y");
+                var size = GetInt(s, "size");
+                var horizontal = GetBool(s, "horizontal");
+                if (x < 0 || x >= Board.Size || y < 0 || y >= Board.Size || size < 1 || size > 4)
+                {
+                    _player.Board.Clear();
+                    await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Invalid ship coordinates or size" } });
+                    return;
+                }
+                if (!_player.Board.PlaceShip(x, y, size, horizontal))
+                {
+                    _player.Board.Clear();
+                    await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Invalid ship placement" } });
+                    return;
+                }
+            }
+
+            await SendAsync(new ServerMessage { Type = "shipPlacementResult", Payload = new { success = true } });
             Console.WriteLine($"Player {_player.Name} placed ships");
         }
         catch (Exception ex)
@@ -584,55 +603,33 @@ public class WebSocketConnection
 
             Console.WriteLine($"Player {_player.Name} joined room {room.Name}");
             Console.WriteLine($"Room now has {room.Players.Count}/{room.MaxPlayers} players");
+            Console.WriteLine($"[JoinRoom] room.IsGameStarted = {room.IsGameStarted}");
             
             // Отправляем обновленный список комнат всем клиентам
             Console.WriteLine($"[JoinRoom] Broadcasting updated rooms list");
             await BroadcastRoomsList();
 
-            // Если комната полна (2 игрока), отправляем обоим игрокам статус ReadyToStart
-            // Они должны разместить корабли и нажать "Готово"
+            // Если комната полна (2 игрока), просто регистрируем, что игра создана.
+            // Старт игры произойдёт только после того, как оба игрока нажмут "Готов"
+            // и сервер получит два сообщения playerready (см. HandlePlayerReady).
+            Console.WriteLine($"[JoinRoom] Checking room full condition: Players.Count={room.Players.Count}, MaxPlayers={room.MaxPlayers}, IsGameStarted={room.IsGameStarted}");
             if (room.Players.Count >= room.MaxPlayers && room.IsGameStarted)
             {
                 Console.WriteLine($"[JoinRoom] ✅ Room {room.Name} is FULL! Players: {room.Players.Count}/{room.MaxPlayers}");
                 Console.WriteLine($"[JoinRoom] Player1: {room.Players[0].Name}, Player2: {room.Players[1].Name}");
-                
+
                 // Находим созданную игру
-                var game = GameServer.Instance.GameManager.ActiveGames.FirstOrDefault(g => 
+                var game = GameServer.Instance.GameManager.ActiveGames.FirstOrDefault(g =>
                     (g.Player1.Id == room.Players[0].Id && g.Player2.Id == room.Players[1].Id) ||
                     (g.Player1.Id == room.Players[1].Id && g.Player2.Id == room.Players[0].Id));
 
                 if (game != null)
                 {
-                    Console.WriteLine($"[JoinRoom] Found game: {game.Player1.Name} vs {game.Player2.Name}");
-                    
-                    // Отправляем ReadyToStart сообщение обоим игрокам (не GameStart!)
-                    var player1Connection = GameServer.Instance.GetConnectionByPlayerId(game.Player1.Id);
-                    var player2Connection = GameServer.Instance.GetConnectionByPlayerId(game.Player2.Id);
-
-                    Console.WriteLine($"[JoinRoom] Player1 connection: {(player1Connection != null ? "✅ Found" : "❌ Not found")}");
-                    Console.WriteLine($"[JoinRoom] Player2 connection: {(player2Connection != null ? "✅ Found" : "❌ Not found")}");
-
-                    if (player1Connection != null)
-                    {
-                        Console.WriteLine($"[JoinRoom] Sending ReadyToStart to Player1: {game.Player1.Name}");
-                        await player1Connection.SendAsync(new ServerMessage
-                        {
-                            Type = "GameStateChanged",
-                            Payload = new { state = "ReadyToStart" }
-                        });
-                    }
-
-                    if (player2Connection != null)
-                    {
-                        Console.WriteLine($"[JoinRoom] Sending ReadyToStart to Player2: {game.Player2.Name}");
-                        await player2Connection.SendAsync(new ServerMessage
-                        {
-                            Type = "GameStateChanged",
-                            Payload = new { state = "ReadyToStart" }
-                        });
-                    }
-
-                    Console.WriteLine($"[JoinRoom] ReadyToStart sent to both players - waiting for them to click Ready");
+                    Console.WriteLine($"[JoinRoom] Game session exists: {game.Player1.Name} vs {game.Player2.Name}. Waiting for both players to send playerready.");
+                }
+                else
+                {
+                    Console.WriteLine($"[JoinRoom] ❌ Game not found in ActiveGames!");
                 }
             }
         }
@@ -817,6 +814,95 @@ public class WebSocketConnection
         }
     }
 
+    private async Task HandlePlayAgain()
+    {
+        try
+        {
+            Console.WriteLine($"[DEBUG] ============ HandlePlayAgain START ============");
+            
+            if (_player == null)
+            {
+                Console.WriteLine("[PlayAgain] ERROR: No player");
+                await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Not connected" } });
+                return;
+            }
+
+            var game = GameServer.Instance.GameManager.FindGameByPlayerId(_player.Id);
+            if (game == null)
+            {
+                Console.WriteLine("[PlayAgain] ERROR: No game");
+                await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Not in a game" } });
+                return;
+            }
+
+            // Determine which player is sending the message
+            if (game.Player1.Id == _player.Id)
+            {
+                game.Player1WantsPlayAgain = true;
+                Console.WriteLine($"[PlayAgain] Player1 ({_player.Id}) wants to play again");
+            }
+            else if (game.Player2.Id == _player.Id)
+            {
+                game.Player2WantsPlayAgain = true;
+                Console.WriteLine($"[PlayAgain] Player2 ({_player.Id}) wants to play again");
+            }
+            else
+            {
+                Console.WriteLine("[PlayAgain] ERROR: Player ID doesn't match either player");
+                await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Invalid player ID" } });
+                return;
+            }
+
+            // Check if both players want to play again
+            if (game.BothPlayersWantPlayAgain)
+            {
+                Console.WriteLine("[PlayAgain] Both players want to play again - resetting game");
+                game.ResetForNewGame();
+
+                // Get both player connections
+                var player1Conn = GameServer.Instance.GetConnectionByPlayerId(game.Player1.Id);
+                var player2Conn = GameServer.Instance.GetConnectionByPlayerId(game.Player2.Id);
+
+                // Send ReturnToPlacement message to both players
+                var returnMessage = new ServerMessage
+                {
+                    Type = "ReturnToPlacement",
+                    Payload = new { message = "Both players agreed to play again. Returning to ship placement..." }
+                };
+
+                if (player1Conn != null)
+                {
+                    await player1Conn.SendAsync(returnMessage);
+                    Console.WriteLine("[PlayAgain] Sent ReturnToPlacement to Player1");
+                }
+
+                if (player2Conn != null)
+                {
+                    await player2Conn.SendAsync(returnMessage);
+                    Console.WriteLine("[PlayAgain] Sent ReturnToPlacement to Player2");
+                }
+            }
+            else
+            {
+                // Notify the player that we're waiting for the opponent
+                await SendAsync(new ServerMessage
+                {
+                    Type = "info",
+                    Payload = new { message = "Waiting for opponent to agree to play again..." }
+                });
+                Console.WriteLine($"[PlayAgain] Waiting for opponent - Player1 wants: {game.Player1WantsPlayAgain}, Player2 wants: {game.Player2WantsPlayAgain}");
+            }
+
+            Console.WriteLine($"[DEBUG] ============ HandlePlayAgain END ============");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[PlayAgain] ERROR: {ex.Message}");
+            Console.WriteLine($"[DEBUG] ❌ Exception in HandlePlayAgain: {ex}");
+            await SendAsync(new ServerMessage { Type = "error", Payload = new { message = ex.Message } });
+        }
+    }
+
     public async Task SendAsync(ServerMessage message)
     {
         try
@@ -853,5 +939,21 @@ public class WebSocketConnection
         {
             Console.WriteLine($"[SendAsync] ❌ Error sending message: {ex.Message}");
         }
+    }
+
+    private static int GetInt(JsonElement e, string name)
+    {
+        foreach (var p in e.EnumerateObject())
+            if (string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase))
+                return p.Value.TryGetInt32(out var i) ? i : 0;
+        return 0;
+    }
+
+    private static bool GetBool(JsonElement e, string name)
+    {
+        foreach (var p in e.EnumerateObject())
+            if (string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase))
+                return p.Value.ValueKind == JsonValueKind.True;
+        return false;
     }
 }

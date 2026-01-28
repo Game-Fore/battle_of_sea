@@ -1,4 +1,4 @@
-﻿namespace battle_of_sea.Game
+namespace battle_of_sea.Game
 {
     public enum CellState
     {
@@ -23,6 +23,17 @@
         public List<Ship> Ships { get; } = new();
 
         public Board() { }
+
+        public void Clear()
+        {
+            Cells = new CellState[Size, Size];
+            Ships.Clear();
+        }
+
+        public void Reset()
+        {
+            Clear();
+        }
 
         public bool PlaceShip(int x, int y, int size, bool horizontal)
         {

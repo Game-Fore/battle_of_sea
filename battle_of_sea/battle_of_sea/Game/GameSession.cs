@@ -1,4 +1,4 @@
-﻿using battle_of_sea.Protocol;
+using battle_of_sea.Protocol;
 using battle_of_sea.Network;
 using System;
 using System.Timers;
@@ -12,6 +12,8 @@ namespace battle_of_sea.Game
         public bool IsFinished { get; private set; }
         public bool Player1Ready { get; set; } = false;
         public bool Player2Ready { get; set; } = false;
+        public bool Player1WantsPlayAgain { get; set; } = false;
+        public bool Player2WantsPlayAgain { get; set; } = false;
 
         public string CurrentTurnPlayerId { get; private set; }
 
@@ -41,6 +43,7 @@ namespace battle_of_sea.Game
             CurrentTurnPlayerId == Player1.Id ? Player2 : Player1;
 
         public bool BothPlayersReady => Player1Ready && Player2Ready;
+        public bool BothPlayersWantPlayAgain => Player1WantsPlayAgain && Player2WantsPlayAgain;
 
         public void SwitchTurn()
         {
@@ -76,6 +79,7 @@ namespace battle_of_sea.Game
             // Проверка хода (дополнительная защита)
             if (shooter.Id != CurrentTurnPlayerId)
             {
+                Console.WriteLine($"[ProcessShot] Not your turn: shooter.Id={shooter.Id}, CurrentTurnPlayerId={CurrentTurnPlayerId}, P1.Id={Player1.Id}, P2.Id={Player2.Id}");
                 await SendMessageToPlayer(shooter, new ServerMessage
                 {
                     Type = "error",
@@ -127,11 +131,42 @@ namespace battle_of_sea.Game
                 return;
             }
 
-            // Передаём ход и перезапускаем таймер
-            SwitchTurn();
+            // Передаём ход только при промахе; при Hit/Sunk стреляющий стреляет снова (как в правилах морского боя)
+            if (result == ShotResult.Miss)
+            {
+                SwitchTurn();
+                var nextPlayer = GetCurrentPlayer();
+                var prevPlayer = GetOpponentPlayer();
+                
+                // Уведомляем оба плеера о смене хода
+                await SendMessageToPlayer(nextPlayer, 
+                    new ServerMessage { Type = "YourTurn" });
+                await SendMessageToPlayer(prevPlayer,
+                    new ServerMessage { Type = "OpponentTurn" });
+            }
+            // при Hit/Sunk ход не переключается — ShootResult уже отправлен, клиент оставит isMyTurn=true
+        }
 
-            await SendMessageToPlayer(GetCurrentPlayer(), 
-                new ServerMessage { Type = "YourTurn" });
+        public void ResetForNewGame()
+        {
+            // Сбрасываем флаги готовности и флаги "хочу еще раз"
+            Player1Ready = false;
+            Player2Ready = false;
+            Player1WantsPlayAgain = false;
+            Player2WantsPlayAgain = false;
+            
+            // Сбрасываем доски
+            Player1.Board.Reset();
+            Player2.Board.Reset();
+            
+            // Сбрасываем текущий ход
+            CurrentTurnPlayerId = Player1.Id;
+            
+            // Сбрасываем флаг завершения
+            IsFinished = false;
+            
+            // Перезапускаем таймер
+            StartTurnTimer();
         }
 
         private async Task SendMessageToPlayer(Player player, ServerMessage message)

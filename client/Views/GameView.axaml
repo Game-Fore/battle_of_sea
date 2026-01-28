@@ -1,65 +1,78 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Игровой экран -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:BattleOfSea.Controls"
-             xmlns:views="clr-namespace:BattleOfSea.Views"
-             xmlns:converters="clr-namespace:BattleOfSea.Converters"
-             x:Class="BattleOfSea.Views.GameView">
-  <UserControl.Resources>
-    <converters:StateToReadyVisibleConverter x:Key="StateToReadyVisibleConverter"/>
-    <converters:StateToOpponentBoardClickableConverter x:Key="StateToOpponentBoardClickable"/>
-    <converters:StateToGameActiveConverter x:Key="StateToGameActive"/>
-  </UserControl.Resources>
-  <StackPanel Margin="8" Spacing="8">
-    <!-- Экран размещения кораблей -->
-    <views:ShipPlacementView DataContext="{Binding}" IsVisible="{Binding ShowPlacement}" />
-
-    <!-- Экран игры -->
-    <StackPanel IsVisible="{Binding ShowGame}">
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Spacing="12">
-        <Button Content="Выйти в лобби" Click="ExitToLobby_Click" 
-                HorizontalContentAlignment="Center" />
-        <Button Content="💬 Чат" Click="OpenChat_Click" 
-                HorizontalContentAlignment="Center" Background="#1E90FF" Foreground="White" />
-        <Border Padding="12,6" CornerRadius="8" Background="{Binding StatusBackground}">
-          <TextBlock Text="{Binding StatusText}" FontSize="18" FontWeight="Bold" 
-                     Foreground="{Binding StatusForeground}" />
-        </Border>
-        <TextBlock Text="{Binding RoomName, StringFormat='Комната: {0}'}" FontSize="12" 
-                   VerticalAlignment="Center" Opacity="0.7" />
-      </StackPanel>
-
-      <!-- День 12: UX улучшения - счетчики кораблей -->
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24" Margin="0,8">
-        <Border Padding="12,6" CornerRadius="8" Background="#E0E7FF">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="Ваши корабли:" FontSize="14" FontWeight="Bold" />
-            <TextBlock Text="{Binding OwnRemainingShips}" FontSize="14" FontWeight="Bold" Foreground="#4338CA" />
-          </StackPanel>
-        </Border>
-        <Border Padding="12,6" CornerRadius="8" Background="#FEE2E2">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="Корабли противника:" FontSize="14" FontWeight="Bold" />
-            <TextBlock Text="{Binding EnemyRemainingShips}" FontSize="14" FontWeight="Bold" Foreground="#DC2626" />
-          </StackPanel>
-        </Border>
-      </StackPanel>
-
-      <!-- Таймер и кнопка Готово -->
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24" Margin="0,12">
-        <controls:TimerControl Name="GameTimer" />
-        <Button Content="✅ Готово"
-                Command="{Binding ReadyCommand}"
-                IsVisible="{Binding State, Converter={StaticResource StateToReadyVisibleConverter}}"
-                MinHeight="36"
-                Padding="16,6"
-                FontSize="14"
-                Background="#10B981"
-                Foreground="White" />
-      </StackPanel>
-
-      <views:BoardView DataContext="{Binding}" />
+             xmlns:vm="clr-namespace:client.ViewModels"
+             x:DataType="vm:GameViewModel"
+             x:Class="client.Views.GameView">
+  <Grid RowDefinitions="Auto,Auto,Auto" Margin="16">
+    <StackPanel>
+      <TextBlock Text="Морской бой" FontSize="20" FontWeight="Bold" Margin="0,0,0,4"/>
+      <TextBlock Text="{Binding Status}" Margin="0,0,0,8"/>
     </StackPanel>
-  </StackPanel>
+
+    <!-- Два поля — отдельный блок фиксированного размера, не растягивается по окну -->
+    <Grid Grid.Row="1" ColumnDefinitions="Auto,16,Auto"
+          VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,8,0,0">
+      <!-- Моё поле: свои корабли и отметки выстрелов противника -->
+      <StackPanel Grid.Column="0">
+        <TextBlock Text="Моё поле" FontWeight="Bold" Margin="0,0,0,4"/>
+        <Border Width="190" Height="190" BorderBrush="Gray" BorderThickness="1" Padding="0">
+          <ItemsControl ItemsSource="{Binding MyBoardCells}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Rows="10" Columns="10"/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:GameCellViewModel">
+                <Border Width="19" Height="19" Margin="0"
+                        BorderBrush="Gray" BorderThickness="1"
+                        Background="{Binding CellBackground}"/>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Border>
+      </StackPanel>
+
+      <!-- Поле противника: выстрелы по врагу (клик — выстрел при своём ходе) -->
+      <StackPanel Grid.Column="2">
+        <TextBlock Text="Поле противника" FontWeight="Bold" Margin="0,0,0,4"/>
+        <Border Width="190" Height="190" BorderBrush="Gray" BorderThickness="1" Padding="0">
+          <ItemsControl ItemsSource="{Binding EnemyBoardCells}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Rows="10" Columns="10"/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:GameCellViewModel">
+                <Border Width="19" Height="19" Margin="0"
+                        BorderBrush="Gray" BorderThickness="1"
+                        Background="{Binding CellBackground}">
+                  <Button Background="Transparent" BorderThickness="0"
+                          Command="{Binding ShootCommand}"
+                          CommandParameter="{Binding}"/>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Border>
+      </StackPanel>
+    </Grid>
+
+    <!-- Экран результата игры -->
+    <Grid Grid.Row="2" Margin="0,16,0,0" IsVisible="{Binding GameResultVisible}">
+      <Border Background="White" BorderBrush="Black" BorderThickness="2" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+          <TextBlock Text="{Binding GameResult}" FontSize="18" FontWeight="Bold" TextAlignment="Center"/>
+          <Button Content="Начать новую игру" 
+                  Command="{Binding PlayAgainCommand}"
+                  Padding="16,8"
+                  Background="Blue"
+                  Foreground="White"
+                  HorizontalAlignment="Center"/>
+          <TextBlock Text="Ожидание решения второго игрока..." FontSize="12" TextAlignment="Center" Foreground="Gray"/>
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Grid>
 </UserControl>

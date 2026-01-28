@@ -114,14 +114,17 @@ namespace battle_of_sea.Game
 
         public void JoinRoom(Player player, Room room)
         {
+            Console.WriteLine($"[GameManager.JoinRoom] Starting join for player {player.Name} to room {room.Name}");
             if (!room.Players.Contains(player))
             {
                 room.Players.Add(player);
+                Console.WriteLine($"[GameManager.JoinRoom] Player added. Room now has {room.Players.Count} players");
             }
 
             // Если комната полна, начинаем игру
             if (room.Players.Count >= room.MaxPlayers)
             {
+                Console.WriteLine($"[GameManager.JoinRoom] ✅ Room is FULL! Creating game session...");
                 var game = new GameSession(room.Players[0], room.Players[1]);
                 
                 // Подписываемся на событие завершения игры
@@ -129,8 +132,13 @@ namespace battle_of_sea.Game
                 
                 ActiveGames.Add(game);
                 room.IsGameStarted = true;
+                Console.WriteLine($"[GameManager.JoinRoom] ✅ Game session created and room.IsGameStarted set to TRUE");
 
                 Console.WriteLine($"Game started in room {room.Name}: {room.Players[0].Name} vs {room.Players[1].Name}");
+            }
+            else
+            {
+                Console.WriteLine($"[GameManager.JoinRoom] Room not full yet ({room.Players.Count}/{room.MaxPlayers})");
             }
         }
 
@@ -149,7 +157,8 @@ namespace battle_of_sea.Game
         public void FinishGame(GameSession game)
         {
             Console.WriteLine($"Game finished: {game.Player1.Name} vs {game.Player2.Name}");
-            RemoveGame(game);
+            // НЕ удаляем игру - она может быть переиспользована для Play Again
+            // Игра остаётся в ActiveGames, но отмечена как IsFinished = true
         }
 
         public Room? FindRoomByPlayerId(string playerId)

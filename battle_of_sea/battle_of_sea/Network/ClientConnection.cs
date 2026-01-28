@@ -310,6 +310,89 @@ namespace battle_of_sea.Network
                         break;
                     }
 
+                case "playagain":
+                    {
+                        if (_player == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Not connected" }
+                            });
+                            break;
+                        }
+
+                        var game = GameServer.Instance.GameManager.FindGameByPlayerId(_player.Id);
+                        if (game == null)
+                        {
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "error",
+                                Payload = new { message = "Not in a game" }
+                            });
+                            break;
+                        }
+
+                        // Determine which player is sending the message
+                        if (game.Player1.Id == _player.Id)
+                        {
+                            game.Player1WantsPlayAgain = true;
+                            Console.WriteLine($"[PlayAgain] Player1 ({_player.Id}) wants to play again");
+                        }
+                        else if (game.Player2.Id == _player.Id)
+                        {
+                            game.Player2WantsPlayAgain = true;
+                            Console.WriteLine($"[PlayAgain] Player2 ({_player.Id}) wants to play again");
+                        }
+                        else
+                        {
+                            await SendAsync(new ServerMessage { Type = "error", Payload = new { message = "Invalid player ID" } });
+                            break;
+                        }
+
+                        // Check if both players want to play again
+                        if (game.BothPlayersWantPlayAgain)
+                        {
+                            Console.WriteLine("[PlayAgain] Both players want to play again - resetting game");
+                            game.ResetForNewGame();
+
+                            // Get both player connections
+                            var player1Conn = game.Player1.Connection as ClientConnection;
+                            var player2Conn = game.Player2.Connection as ClientConnection;
+
+                            // Send ReturnToPlacement message to both players
+                            var returnMessage = new ServerMessage
+                            {
+                                Type = "ReturnToPlacement",
+                                Payload = new { message = "Both players agreed to play again. Returning to ship placement..." }
+                            };
+
+                            if (player1Conn != null)
+                            {
+                                await player1Conn.SendAsync(returnMessage);
+                                Console.WriteLine("[PlayAgain] Sent ReturnToPlacement to Player1");
+                            }
+
+                            if (player2Conn != null)
+                            {
+                                await player2Conn.SendAsync(returnMessage);
+                                Console.WriteLine("[PlayAgain] Sent ReturnToPlacement to Player2");
+                            }
+                        }
+                        else
+                        {
+                            // Notify the player that we're waiting for the opponent
+                            await SendAsync(new ServerMessage
+                            {
+                                Type = "info",
+                                Payload = new { message = "Waiting for opponent to agree to play again..." }
+                            });
+                            Console.WriteLine($"[PlayAgain] Waiting for opponent - Player1 wants: {game.Player1WantsPlayAgain}, Player2 wants: {game.Player2WantsPlayAgain}");
+                        }
+
+                        break;
+                    }
+
                 case "roomslist":
                     {
                         await BroadcastRoomsList();

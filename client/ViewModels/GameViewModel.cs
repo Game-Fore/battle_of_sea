@@ -1,331 +1,337 @@
-// Управление игрой
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Windows.Input;
 using Avalonia.Media;
-using BattleOfSea.Models;
+using client.Models;
+using client.Services;
+using client.Utils;
 
-namespace BattleOfSea.ViewModels
+namespace client.ViewModels;
+
+public enum ShotState { None, Miss, Hit, Sunk }
+
+public class GameCellViewModel : INotifyPropertyChanged
 {
-    public class GameViewModel : INotifyPropertyChanged
+    private bool _hasShip;
+    private ShotState _shotState;
+    private IBrush _cellBackground;
+
+    public int X { get; }
+    public int Y { get; }
+
+    /// <summary>Для ячеек поля противника — команда выстрела (задаётся из GameViewModel).</summary>
+    public ICommand? ShootCommand { get; set; }
+
+    public bool HasShip
     {
-        private GameState _state = GameState.WaitingForOpponent;
+        get => _hasShip;
+        set 
+        { 
+            _hasShip = value; 
+            OnPropertyChanged(); 
+            UpdateBackground();
+        }
+    }
 
-        public GameState State
-        {
-            get => _state;
-            set
+    public ShotState ShotState
+    {
+        get => _shotState;
+        set 
+        { 
+            _shotState = value; 
+            OnPropertyChanged(); 
+            OnPropertyChanged(nameof(ShotStateText)); 
+            UpdateBackground();
+        }
+    }
+
+    public string ShotStateText => _shotState.ToString();
+
+    public IBrush CellBackground
+    {
+        get => _cellBackground ?? Brushes.Transparent;
+        set 
+        { 
+            if (_cellBackground != value)
             {
-                if ((_state == GameState.YouWin || _state == GameState.YouLose) && value != _state)
-                {
-                    if (value != GameState.YouWin && value != GameState.YouLose)
-                        return;
-                }
-
-                _state = value;
-                Console.WriteLine($"[GameViewModel] State changed to: {value}");
+                _cellBackground = value;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(StatusText));
-                OnPropertyChanged(nameof(StatusBackground));
-                OnPropertyChanged(nameof(StatusForeground));
             }
         }
+    }
 
-        public string StatusText => State switch
+    private void UpdateBackground()
+    {
+        // Приоритет: выстрелы > корабли > пусто
+        if (ShotState == ShotState.Sunk) 
         {
-            GameState.WaitingForOpponent => "⏳ Ожидание соперника...",
-            GameState.ReadyToStart => "✅ Соперник найден! Можно играть",
-            GameState.YourTurn => "Ваш ход",
-            GameState.OpponentTurn => "Ход соперника",
-            GameState.YouWin => "🎉 Вы победили! 🎉",
-            GameState.YouLose => "😢 Вы проиграли",
-            GameState.OpponentSurrender => "Соперник сдался.",
-            GameState.Hit => "💥 Попал!",
-            GameState.Miss => "💧 Промах",
-            GameState.Sunk => "💥 Корабль потоплен!",
-            _ => string.Empty
-        };
-
-        public IBrush StatusBackground => State switch
+            CellBackground = Brushes.DarkRed;
+        }
+        else if (ShotState == ShotState.Hit) 
         {
-            GameState.YouWin => new SolidColorBrush(Color.FromRgb(34, 197, 94)),
-            GameState.YouLose => new SolidColorBrush(Color.FromRgb(239, 68, 68)),
-            GameState.Hit => new SolidColorBrush(Color.FromRgb(251, 191, 36)),
-            GameState.Sunk => new SolidColorBrush(Color.FromRgb(220, 38, 38)),
-            GameState.Miss => new SolidColorBrush(Color.FromRgb(147, 197, 253)),
-            GameState.YourTurn => new SolidColorBrush(Color.FromRgb(34, 197, 94)),
-            GameState.ReadyToStart => new SolidColorBrush(Color.FromRgb(59, 130, 246)),
-            GameState.OpponentTurn => new SolidColorBrush(Color.FromRgb(156, 163, 175)),
-            _ => new SolidColorBrush(Color.FromRgb(229, 231, 235))
-        };
-
-        public IBrush StatusForeground =>
-            (State == GameState.YouWin ||
-             State == GameState.YouLose ||
-             State == GameState.Hit ||
-             State == GameState.Sunk ||
-             State == GameState.YourTurn ||
-             State == GameState.ReadyToStart)
-                ? Brushes.White
-                : Brushes.Black;
-
-        public string? RoomName { get; }
-        public Board Own { get; } = new Board(10);
-        public Board Enemy { get; } = new Board(10);
-        public ShipPlacementManager ShipManager { get; } = new ShipPlacementManager();
-
-        public int OwnRemainingShips => Own.RemainingShipsCount();
-        public int EnemyRemainingShips => Enemy.RemainingShipsCount();
-
-        private bool _shipsPlaced;
-        public bool ShipsPlaced
+            CellBackground = Brushes.Red;
+        }
+        else if (ShotState == ShotState.Miss) 
         {
-            get => _shipsPlaced;
-            set
+            CellBackground = Brushes.LightGray;
+        }
+        else if (HasShip) 
+        {
+            CellBackground = Brushes.SteelBlue;
+        }
+        else 
+        {
+            CellBackground = Brushes.Transparent;
+        }
+    }
+
+    public GameCellViewModel(int x, int y)
+    {
+        X = x;
+        Y = y;
+        _cellBackground = Brushes.Transparent;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+}
+
+public class GameViewModel : INotifyPropertyChanged
+{
+    private readonly GameServerClient _client;
+    private string _status;
+    private bool _isMyTurn;
+    private bool _gameOver;
+    private bool _isWinner;
+    private string _gameResult;
+    private bool _gameResultVisible;
+
+    public RoomInfo Room { get; }
+
+    public ObservableCollection<GameCellViewModel> MyBoardCells { get; } = new();
+    public ObservableCollection<GameCellViewModel> EnemyBoardCells { get; } = new();
+
+    public string Status
+    {
+        get => _status;
+        set { _status = value; OnPropertyChanged(); }
+    }
+
+    public bool IsMyTurn
+    {
+        get => _isMyTurn;
+        set { _isMyTurn = value; OnPropertyChanged(); RaiseShootCanExecute(); }
+    }
+
+    public bool GameOver
+    {
+        get => _gameOver;
+        set { _gameOver = value; OnPropertyChanged(); }
+    }
+
+    public bool IsWinner
+    {
+        get => _isWinner;
+        set { _isWinner = value; OnPropertyChanged(); }
+    }
+
+    public string GameResult
+    {
+        get => _gameResult;
+        set { _gameResult = value; OnPropertyChanged(); }
+    }
+
+    public bool GameResultVisible
+    {
+        get => _gameResultVisible;
+        set { _gameResultVisible = value; OnPropertyChanged(); }
+    }
+
+    public ICommand ShootCommand { get; }
+    public ICommand PlayAgainCommand { get; }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    public event Action<RoomInfo>? ReturnToPlacementRequested;
+
+    public GameViewModel(GameServerClient client, RoomInfo room, bool isYourTurn, IReadOnlyList<(int x, int y)> myShips)
+    {
+        _client = client;
+        Room = room;
+        _isMyTurn = isYourTurn;
+        _status = isYourTurn ? "Ваш ход. Выберите клетку на поле противника." : "Ход соперника.";
+        _gameOver = false;
+        _gameResult = string.Empty;
+        _gameResultVisible = false;
+
+        for (int y = 0; y < 10; y++)
+            for (int x = 0; x < 10; x++)
             {
-                _shipsPlaced = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(ShowPlacement));
-                OnPropertyChanged(nameof(ShowGame));
+                var c = new GameCellViewModel(x, y);
+                if (myShips.Any(s => s.x == x && s.y == y))
+                    c.HasShip = true;
+                MyBoardCells.Add(c);
             }
+
+        for (int y = 0; y < 10; y++)
+            for (int x = 0; x < 10; x++)
+                EnemyBoardCells.Add(new GameCellViewModel(x, y));
+
+        ICommand? shootCmd = null;
+        shootCmd = new RelayCommand(async param =>
+        {
+            if (param is GameCellViewModel cell && !_gameOver && _isMyTurn && cell.ShotState == ShotState.None)
+                await _client.SendAsync("shoot", new { row = cell.Y, col = cell.X });
+        }, param => !_gameOver && _isMyTurn && param is GameCellViewModel c && c.ShotState == ShotState.None);
+        ShootCommand = shootCmd;
+
+        ICommand? playAgainCmd = null;
+        playAgainCmd = new RelayCommand(async _ =>
+        {
+            await _client.SendAsync("playAgain", new { });
+        });
+        PlayAgainCommand = playAgainCmd;
+
+        foreach (var cell in EnemyBoardCells)
+        {
+            cell.ShootCommand = ShootCommand;
+            cell.PropertyChanged += (_, _) => (ShootCommand as RelayCommand)?.RaiseCanExecuteChanged();
         }
 
-        public bool ShowPlacement => !ShipsPlaced;
-        public bool ShowGame => ShipsPlaced;
+        _client.MessageReceived += OnServerMessage;
+    }
 
-        public event Action? ExitRequested;
+    private void RaiseShootCanExecute() => (ShootCommand as RelayCommand)?.RaiseCanExecuteChanged();
 
-        public ICommand ShootCommand { get; }
-        public ICommand ReadyCommand { get; }
-        public ICommand StartGameCommand { get; }
-        public ICommand SelectShipCommand { get; }
-        public ICommand RotateShipCommand { get; }
-        public ICommand RemoveShipCommand { get; }
-
-        private int? _selectedShipSize;
-        public int? SelectedShipSize
+    private void OnServerMessage(string type, JsonElement payload)
+    {
+        if (string.Equals(type, "ShootResult", StringComparison.OrdinalIgnoreCase))
         {
-            get => _selectedShipSize;
-            set { _selectedShipSize = value; OnPropertyChanged(); }
-        }
-
-        private bool _isHorizontal = true;
-        public bool IsHorizontal
-        {
-            get => _isHorizontal;
-            set { _isHorizontal = value; OnPropertyChanged(); }
-        }
-
-        private readonly Services.INetworkService? _networkService;
-        private readonly string? _roomId;
-
-        public GameViewModel(Room? room, Services.INetworkService? networkService)
-        {
-            _networkService = networkService;
-            RoomName = room?.Name;
-            _roomId = room?.Id;
-
-            Console.WriteLine($"[GameVM] RoomId = '{_roomId}', RoomName = '{RoomName}'");
-
-            ShipsPlaced = false;
-
-            if (_networkService != null)
+            var x = GetInt(payload, "x");
+            var y = GetInt(payload, "y");
+            var res = GetString(payload, "result");
+            
+            var cell = GetEnemyCell(x, y);
+            if (cell != null)
             {
-                _networkService.ShootResultReceived += OnShootResultReceived;
-                _networkService.OpponentShootReceived += OnOpponentShootReceived;
-                _networkService.GameStateChanged += OnGameStateChanged;
-            }
-
-            ShootCommand = new Utils.RelayCommand(o =>
-            {
-                if (o is BoardCell cell)
-                    _ = ShootAt(cell);
-            });
-
-            ReadyCommand = new Utils.RelayCommand(_ =>
-            {
-                _ = SendPlayerReadyAsync();
-            });
-
-            StartGameCommand = new Utils.RelayCommand(_ =>
-            {
-                if (ShipManager.AllShipsPlaced)
+                var newState = ParseShotState(res);
+                cell.ShotState = newState;
+                
+                // При попадании/потоплении — стреляем ещё раз; при промахе ждём YourTurn/OpponentTurn
+                if (res == "Hit" || res == "Sunk")
                 {
-                    ShipsPlaced = true;
-                    _ = SendShipPlacementAsync();
-                }
-            });
-
-            SelectShipCommand = new Utils.RelayCommand(o =>
-            {
-                if (int.TryParse(o?.ToString(), out int size))
-                    SelectedShipSize = size;
-            });
-
-            RotateShipCommand = new Utils.RelayCommand(_ =>
-            {
-                IsHorizontal = !IsHorizontal;
-            });
-
-            RemoveShipCommand = new Utils.RelayCommand(o =>
-            {
-                if (o is BoardCell cell)
-                    RemoveShip(cell.Row, cell.Col);
-            });
-        }
-
-        public bool PlaceShip(int r, int c, int size, bool horizontal)
-        {
-            if (!ShipManager.CanPlaceShip(size)) return false;
-
-            if (Own.PlaceShip(r, c, size, horizontal))
-            {
-                ShipManager.PlaceShip(size);
-                OnPropertyChanged(nameof(ShipManager));
-                return true;
-            }
-
-            return false;
-        }
-
-        public void PlaceShipAtCell(BoardCell cell)
-        {
-            if (SelectedShipSize.HasValue)
-                PlaceShip(cell.Row, cell.Col, SelectedShipSize.Value, IsHorizontal);
-        }
-
-        public void RemoveShip(int r, int c)
-        {
-            var ships = Own.GetShips();
-            foreach (var ship in ships)
-            {
-                var cell = ship.Find(x => x.Row == r && x.Col == c);
-                if (cell != null)
-                {
-                    Own.RemoveShip(r, c);
-                    ShipManager.RemoveShip(ship.Count);
-                    OnPropertyChanged(nameof(ShipManager));
-                    break;
+                    IsMyTurn = true;
+                    Status = "Вы попали! Ваш ход продолжается. Выберите клетку на поле противника.";
                 }
             }
         }
-
-        public async System.Threading.Tasks.Task ShootAt(BoardCell cell)
+        else if (string.Equals(type, "OpponentShoot", StringComparison.OrdinalIgnoreCase))
         {
-            if (cell.IsRevealed) return;
-            if (State != GameState.YourTurn) return;
-            if (_networkService == null || _roomId == null) return;
-
-            await _networkService.SendShootAsync(cell.Row, cell.Col, _roomId);
-        }
-
-        public void RequestExit()
-        {
-            ExitRequested?.Invoke();
-        }
-
-        private async void OnShootResultReceived(ShootResultMessage message)
-        {
-            var cell = Enemy.GetCell(message.Row, message.Col);
-            if (cell == null || cell.IsRevealed) return;
-
-            cell.IsRevealed = true;
-            cell.IsHit = message.IsHit;
-
-            State = message.IsHit
-                ? (message.IsSunk ? GameState.Sunk : GameState.Hit)
-                : GameState.Miss;
-
-            if (message.IsGameOver)
+            var x = GetInt(payload, "x");
+            var y = GetInt(payload, "y");
+            var res = GetString(payload, "result");
+            
+            var cell = GetMyCell(x, y);
+            if (cell != null)
             {
-                State = message.IsWinner ? GameState.YouWin : GameState.YouLose;
+                var newState = ParseShotState(res);
+                cell.ShotState = newState;
+            }
+        }
+        else if (string.Equals(type, "YourTurn", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(type, "your_turn", StringComparison.OrdinalIgnoreCase))
+        {
+            IsMyTurn = true;
+            Status = "Ваш ход. Выберите клетку на поле противника.";
+        }
+        else if (string.Equals(type, "OpponentTurn", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(type, "opponent_turn", StringComparison.OrdinalIgnoreCase))
+        {
+            IsMyTurn = false;
+            Status = "Ход соперника.";
+        }
+        else if (string.Equals(type, "GameOver", StringComparison.OrdinalIgnoreCase))
+        {
+            var winner = GetString(payload, "winner");
+            var myName = Room.MyPlayerName;
+            
+            GameOver = true;
+            IsMyTurn = false;
+            
+            if (string.Equals(winner, myName, StringComparison.OrdinalIgnoreCase))
+            {
+                IsWinner = true;
+                GameResult = $"Вы выиграли! Поздравляем!";
+                Status = "Игра окончена. Вы победили!";
             }
             else
             {
-                await System.Threading.Tasks.Task.Delay(1500);
-                State = GameState.OpponentTurn;
+                IsWinner = false;
+                GameResult = $"Вы проиграли. {winner} победил.";
+                Status = "Игра окончена. Вы проиграли.";
             }
-
-            OnPropertyChanged(nameof(EnemyRemainingShips));
+            
+            GameResultVisible = true;
         }
-
-        private async void OnOpponentShootReceived(ShootMessage message)
+        else if (string.Equals(type, "ReturnToPlacement", StringComparison.OrdinalIgnoreCase))
         {
-            if (message.RoomId != _roomId) return;
-
-            Own.ShootAt(message.Row, message.Col);
-
-            await System.Threading.Tasks.Task.Delay(1500);
-            State = GameState.YourTurn;
-
-            OnPropertyChanged(nameof(OwnRemainingShips));
+            Console.WriteLine("[GameViewModel] ReturnToPlacement message received");
+            ReturnToPlacementRequested?.Invoke(Room);
         }
-
-        private void OnGameStateChanged(GameStateMessage message)
+        else if (string.Equals(type, "error", StringComparison.OrdinalIgnoreCase))
         {
-            if (!string.IsNullOrEmpty(message.RoomId) && message.RoomId != _roomId)
-                return;
-
-            if (Enum.TryParse<GameState>(message.State, true, out var newState))
-            {
-                Console.WriteLine($"[GameVM] Server state → {newState}");
-                State = newState;
-            }
+            var msg = GetString(payload, "message");
+            Status = "Ошибка: " + (msg ?? "unknown");
         }
-
-        private async System.Threading.Tasks.Task SendPlayerReadyAsync()
-        {
-            if (_networkService == null || _roomId == null) return;
-            await _networkService.SendPlayerReadyAsync(_roomId);
-        }
-
-        private async System.Threading.Tasks.Task SendShipPlacementAsync()
-        {
-            if (_networkService == null || _roomId == null) return;
-
-            var ships = new System.Collections.Generic.List<ShipPlacementData>();
-
-            for (int row = 0; row < Own.Size; row++)
-            {
-                for (int col = 0; col < Own.Size; col++)
-                {
-                    var cell = Own.GetCell(row, col);
-                    if (cell == null || !cell.HasShip) continue;
-
-                    if (col > 0 && Own.GetCell(row, col - 1)?.HasShip == true)
-                        continue;
-
-                    int size = 1;
-                    bool horizontal = true;
-
-                    while (col + size < Own.Size && Own.GetCell(row, col + size)?.HasShip == true)
-                        size++;
-
-                    if (size == 1)
-                    {
-                        horizontal = false;
-                        int v = 1;
-                        while (row + v < Own.Size && Own.GetCell(row + v, col)?.HasShip == true)
-                            v++;
-                        size = v;
-                    }
-
-                    ships.Add(new ShipPlacementData
-                    {
-                        Row = row,
-                        Col = col,
-                        Size = size,
-                        IsHorizontal = horizontal
-                    });
-                }
-            }
-
-            await _networkService.SendShipPlacementAsync(ships, _roomId);
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
+
+    private static int GetInt(JsonElement e, string name)
+    {
+        foreach (var p in e.EnumerateObject())
+            if (string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase) && p.Value.TryGetInt32(out var i))
+                return i;
+        return 0;
+    }
+
+    private static string GetString(JsonElement e, string name)
+    {
+        foreach (var p in e.EnumerateObject())
+            if (string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase))
+                return p.Value.GetString() ?? "";
+        return "";
+    }
+
+    private static ShotState ParseShotState(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return ShotState.None;
+        return s.ToLowerInvariant() switch
+        {
+            "miss" => ShotState.Miss,
+            "hit" => ShotState.Hit,
+            "sunk" => ShotState.Sunk,
+            _ => ShotState.None
+        };
+    }
+
+    private GameCellViewModel? GetMyCell(int x, int y)
+    {
+        foreach (var c in MyBoardCells)
+            if (c.X == x && c.Y == y) return c;
+        return null;
+    }
+
+    private GameCellViewModel? GetEnemyCell(int x, int y)
+    {
+        foreach (var c in EnemyBoardCells)
+            if (c.X == x && c.Y == y) return c;
+        return null;
+    }
+
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

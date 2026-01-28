@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:client.ViewModels"
+             x:DataType="vm:PlacementViewModel"
+             x:Class="client.Views.PlacementView">
+  <Grid RowDefinitions="Auto,Auto,Auto" Margin="16">
+    <StackPanel>
+      <TextBlock Text="Расстановка кораблей" FontSize="24" FontWeight="Bold" Margin="0,0,0,8"/>
+      <TextBlock Text="{Binding Status}" Margin="0,0,0,8"/>
+      <TextBlock Text="{Binding Room.Name, StringFormat='Комната: {0}'}" Margin="0,0,0,4"/>
+      <TextBlock Text="{Binding Room.Id, StringFormat='ID комнаты: {0}'}" FontSize="10" Opacity="0.7"/>
+
+      <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Spacing="16">
+        <StackPanel>
+          <TextBlock Text="Ориентация" FontWeight="Bold"/>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="{Binding IsHorizontal, StringFormat='Горизонтально: {0}'}"/>
+            <Button Content="Повернуть" Command="{Binding ToggleOrientationCommand}"/>
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel>
+          <TextBlock Text="Осталось кораблей:" FontWeight="Bold"/>
+          <TextBlock Text="{Binding ShipsToPlace4, StringFormat='4-палубные: {0}'}"/>
+          <TextBlock Text="{Binding ShipsToPlace3, StringFormat='3-палубные: {0}'}"/>
+          <TextBlock Text="{Binding ShipsToPlace2, StringFormat='2-палубные: {0}'}"/>
+          <TextBlock Text="{Binding ShipsToPlace1, StringFormat='1-палубные: {0}'}"/>
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+
+    <!-- Игровое поле 10×10 — отдельный блок, не привязан к размеру окна; квадратики вплотную -->
+    <Border Grid.Row="1" Width="190" Height="190" BorderBrush="Gray" BorderThickness="1"
+            HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,8,0,0">
+      <ItemsControl ItemsSource="{Binding Cells}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <UniformGrid Rows="10" Columns="10"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:CellViewModel">
+            <Border Width="19" Height="19" Margin="0"
+                    BorderBrush="Gray" BorderThickness="1"
+                    Background="{Binding HasShip, Converter={StaticResource BooleanToBrushConverter}}">
+              <Button Background="Transparent" BorderThickness="0"
+                      Command="{Binding CellClickCommand}"
+                      CommandParameter="{Binding}"/>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Border>
+
+    <StackPanel Grid.Row="2"
+                Orientation="Horizontal"
+                HorizontalAlignment="Stretch"
+                Margin="0,8,0,0">
+      <Button Content="Готов к бою"
+              Command="{Binding ReadyCommand}"
+              IsEnabled="{Binding CanPressReady}"
+              HorizontalAlignment="Left"
+              Margin="0,0,8,0"/>
+
+      <Button Content="Выйти в главное меню"
+              HorizontalAlignment="Right"
+              Command="{Binding BackToMenuCommand}"/>
+    </StackPanel>
+  </Grid>
+</UserControl>
+

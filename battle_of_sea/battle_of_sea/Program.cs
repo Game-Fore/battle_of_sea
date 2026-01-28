@@ -6,7 +6,7 @@ class Program
     {
         Console.WriteLine("Starting WebSocket server...");
 
-        var server = new WebSocketListener(5555);
+        var server = new WebSocketListener(5556);
         await server.StartAsync();
     }
 }
