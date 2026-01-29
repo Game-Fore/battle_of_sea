@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Width="520" Height="500"
+        x:Class="BattleOfSea.Views.ChatWindow"
+        Title="⚓ Чат морского боя"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+	<!-- Основной фон7 -->
+	<Grid Background="#F8FAFC">
+		<Grid Margin="6">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<!-- Панель подключения  -->
+				<RowDefinition Height="*"/>
+				<!-- История сообщений (занимает всё доступное) -->
+				<RowDefinition Height="Auto"/>
+				<!-- Панель отправки -->
+			</Grid.RowDefinitions>
+
+			<!-- Верхняя панель: настройки подключения -->
+			<Border Grid.Row="0"
+                    Background="White"
+                    Padding="10"
+                    CornerRadius="6"
+                    Margin="0,0,0,6"
+                    BorderThickness="1"
+                    BorderBrush="#E2E8F0">
+				<StackPanel Spacing="8">
+
+					<StackPanel Orientation="Horizontal" Spacing="12">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<!-- Круглая синяя иконка с якорем -->
+							<Border Background="#1E40AF"
+                                    Width="36" Height="36"
+                                    CornerRadius="18">
+								<TextBlock Text="⚓"
+                                           FontSize="18"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+							</Border>
+
+							<!-- Название приложения -->
+							<StackPanel VerticalAlignment="Center">
+								<TextBlock Text="ЧАТ МОРСКОГО БОЯ"
+                                           FontSize="13"
+                                           FontWeight="Bold"
+                                           Foreground="#1E293B"/>
+								<TextBlock Text="Переговоры во время сражения"
+                                           FontSize="10"
+                                           Foreground="#64748B"/>
+							</StackPanel>
+						</StackPanel>
+
+						<!-- Вертикальный разделитель -->
+						<Rectangle Width="1" Fill="#E2E8F0" Margin="0,0,12,0"/>
+
+						<!-- Правый блок: поле для имени -->
+						<StackPanel>
+							<TextBlock Text="Ваше имя"
+                                       Foreground="#475569"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"/>
+							<TextBox Name="PlayerNameTextBox"
+                                     Text="Адмирал"
+                                     Width="120" Height="30"
+                                     FontSize="12" Padding="8,5"
+                                     Background="#F8FAFC"
+                                     Foreground="#1E293B"
+                                     BorderBrush="#CBD5E1"
+                                     BorderThickness="1"
+                                     CornerRadius="4"/>
+						</StackPanel>
+					</StackPanel>
+
+					<!-- Вторая строка: сервер и кнопки -->
+					<StackPanel Orientation="Horizontal" Spacing="12">
+						<!-- Блок с настройками сервера -->
+						<StackPanel Orientation="Horizontal" Spacing="10">
+							<!-- Поле для адреса сервера -->
+							<StackPanel>
+								<TextBlock Text="Сервер"
+                                           Foreground="#475569"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"/>
+								<TextBox Name="ServerTextBox"
+                                         Text="localhost"
+                                         Width="100" Height="30"
+                                         FontSize="12" Padding="8,5"
+                                         Background="#F8FAFC"
+                                         Foreground="#1E293B"
+                                         BorderBrush="#CBD5E1"
+                                         BorderThickness="1"
+                                         CornerRadius="4"/>
+							</StackPanel>
+
+							<!-- Поле для порта -->
+							<StackPanel>
+								<TextBlock Text="Порт"
+                                           Foreground="#475569"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"/>
+								<TextBox Name="PortTextBox"
+                                         Text="5500"
+                                         Width="60" Height="30"
+                                         FontSize="12" Padding="8,5"
+                                         Background="#F8FAFC"
+                                         Foreground="#1E293B"
+                                         BorderBrush="#CBD5E1"
+                                         BorderThickness="1"
+                                         CornerRadius="4"/>
+							</StackPanel>
+						</StackPanel>
+
+						<!-- Ещё один разделитель -->
+						<Rectangle Width="1" Fill="#E2E8F0" Margin="0,0,12,0"/>
+
+						<!-- Кнопки подключения -->
+						<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+							<Button Name="ConnectButton"
+                                    Content="Подключиться"
+                                    Width="110" Height="34"
+                                    Background="#10B981" 
+							Foreground="White"
+							FontSize="12"
+							FontWeight="SemiBold"
+							CornerRadius="5"
+							BorderThickness="0"/>
+
+							<Button Name="DisconnectButton"
+                                    Content="Отключиться"
+                                    Width="100" Height="34"
+                                    Background="#94A3B8" 
+							Foreground="White"
+							FontSize="12"
+							FontWeight="SemiBold"
+							CornerRadius="5"
+							BorderThickness="0"
+							IsEnabled="False"/> 
+						</StackPanel>
+					</StackPanel>
+
+					<!-- Третья строка: индикатор статуса -->
+					<StackPanel Orientation="Horizontal" Spacing="8" Margin="0,5,0,0">
+						<Border Name="StatusIndicator"
+                                Width="10" Height="10"
+                                CornerRadius="5"
+                                Background="#EF4444" 
+						VerticalAlignment="Center"
+						Opacity="0.7"/>
+
+						<TextBlock Name="StatusText"
+                                   Text="Не подключено"
+                                   FontSize="11"
+                                   Foreground="#64748B"
+                                   VerticalAlignment="Center"/>
+					</StackPanel>
+
+				</StackPanel>
+			</Border>
+
+			<!-- Центральная область: история сообщений -->
+			<Border Grid.Row="1"
+                    Background="White"
+                    CornerRadius="6"
+                    Margin="0,0,0,6"
+                    BorderThickness="1"
+                    BorderBrush="#E2E8F0">
+				<Grid>
+					<!-- Прокручиваемая область -->
+					<ScrollViewer Name="MessagesScrollViewer"
+                                  Background="Transparent">
+						<StackPanel Name="MessagesPanel"
+                                    Margin="10"
+                                    Spacing="6"/>
+					</ScrollViewer>
+				</Grid>
+			</Border>
+
+			<!-- Нижняя панель: отправка сообщений -->
+			<Border Grid.Row="2"
+                    Background="White"
+                    Padding="10"
+                    CornerRadius="6"
+                    BorderThickness="1"
+                    BorderBrush="#E2E8F0">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+
+					<!-- Поле для ввода текста -->
+					<TextBox Grid.Column="0"
+                             Name="MessageTextBox"
+                             Watermark="Введите сообщение для противника..."
+                             Height="36" FontSize="12"
+                             Padding="10,7"
+                             VerticalContentAlignment="Center"
+                             Background="#F8FAFC"
+                             Foreground="#1E293B"
+                             BorderBrush="#CBD5E1"
+                             BorderThickness="1"
+                             CornerRadius="5"
+                             Margin="0,0,8,0"/>
+
+					<Button Grid.Column="1"
+                            Name="SendButton"
+                            Content="Отправить"
+                            Width="95" Height="36"
+                            Background="#3B82F6"
+                            Foreground="White"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            CornerRadius="5"
+                            BorderThickness="0"
+                            Margin="0,0,8,0"/>
+
+					<Button Grid.Column="2"
+                            Name="ClearButton"
+                            Content="Очистить"
+                            Width="90" Height="36"
+                            Background="#94A3B8"
+                            Foreground="White"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            CornerRadius="5"
+                            BorderThickness="0"/>
+				</Grid>
+			</Border>
+
+		</Grid>
+
+	</Grid>
+</Window>

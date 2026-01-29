@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Таймер визуал -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BattleOfSea.Controls.TimerControl" Width="120" Height="120">
+  <Grid>
+    <Ellipse Width="80" Height="80" Stroke="Gray" StrokeThickness="6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+    <TextBlock Text="{Binding TimeLeftText}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" />
+  </Grid>
+</UserControl>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Диалог победы -->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="BattleOfSea.Views.VictoryDialog"
+        Width="400" Height="300" WindowStartupLocation="CenterOwner"
+        Background="{Binding BackgroundColor}">
+  <StackPanel Margin="20" Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <TextBlock Text="{Binding Icon}" FontSize="80" HorizontalAlignment="Center" />
+    <TextBlock Text="{Binding Message}" FontSize="24" FontWeight="Bold" 
+               Foreground="{Binding TextColor}" HorizontalAlignment="Center" TextAlignment="Center" />
+    <TextBlock Text="{Binding SubMessage}" FontSize="14" 
+               Foreground="{Binding TextColor}" Opacity="0.8" 
+               HorizontalAlignment="Center" TextAlignment="Center" />
+    <Button Content="OK" Width="120" HorizontalAlignment="Center" 
+            Click="OK_Click" Margin="0,20,0,0" />
+  </StackPanel>
+</Window>
+
